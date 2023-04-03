@@ -6,14 +6,8 @@ import pycaret as pyc
 
 n = 2
 
-'''chess_path = os.path.join(os.path.dirname(__file__), 'data/chess_games.csv')
-df = pd.read_csv(chess_path)'''
-
 data_path = os.path.join(os.path.dirname(__file__), 'data/data.csv')
 df = pd.read_csv(data_path)
-
-'''twitter_path = os.path.join(os.path.dirname(__file__), 'data/twitter_MBTI.csv')
-df = pd.read_csv(twitter_path)'''
 
 #df['game_id'] = df['game_id']-1
 
