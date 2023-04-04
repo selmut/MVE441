@@ -28,7 +28,7 @@ std_data = StandardScaler().fit_transform(df_cat)
 pca = PCA(n_components=n, svd_solver='full')
 pca_feats = pca.fit_transform(std_data, labels)
 
-pca1 = pca_feats[:, 0]
+'''pca1 = pca_feats[:, 0]
 pca2 = pca_feats[:, 1]
 
 plt.figure()
@@ -37,7 +37,7 @@ plt.scatter(pca1, pca2, c=labels, s=1, cmap=colors.ListedColormap(c))
 plt.savefig(os.path.join(os.path.dirname(__file__), 'img/')+'pca_plot.png')
 plt.close()
 
-'''csv_path = os.path.join(os.path.dirname(__file__), 'csv/')
+csv_path = os.path.join(os.path.dirname(__file__), 'csv/')
 pca_feats.tofile(csv_path+'pca_feats.csv', sep=',', format='%10.5f')
 
 labels.to_numpy().tofile(csv_path+'labels.csv', sep=',', format='%10.5f')'''
