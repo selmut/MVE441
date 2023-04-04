@@ -39,9 +39,13 @@ def reduce_dim(df, n):
 labels, df_cat = to_categorical(df, 'default_ind')
 pca_feats = reduce_dim(df_cat, n[1])
 #split = train_test_split()
-pca_train_data, pca_test_data, label_train_data, label_test_data = train_test_split(pca_feats, labels, test_size=0.2)
-print(label_test_data.value_counts())
-print(label_train_data.value_counts())
+pca_train_data, pca_test_data, pca_label_train_data, pca_label_test_data = train_test_split(pca_feats, labels, test_size=0.2)
+
+csv_path = os.path.join(os.path.dirname(__file__), 'csv/')
+pca_train_data.tofile(csv_path+'pca_train.csv', sep=',', format='%10.5f')
+pca_test_data.tofile(csv_path+'pca_test.csv', sep=',', format='%10.5f')
+pca_label_train_data.to_numpy().tofile(csv_path+'pca_label_train.csv', sep=',')
+pca_label_test_data.to_numpy().tofile(csv_path+'pca_lable_test.csv', sep=',')
 '''pca1 = pca_feats[:, 0]
 pca2 = pca_feats[:, 1]
 
@@ -51,11 +55,10 @@ plt.scatter(pca1, pca2, c=labels, s=1, cmap=colors.ListedColormap(c))
 plt.savefig(os.path.join(os.path.dirname(__file__), 'img/')+'pca_plot.png')
 plt.close()
 
-csv_path = os.path.join(os.path.dirname(__file__), 'csv/')
 pca_feats.tofile(csv_path+'pca_feats.csv', sep=',', format='%10.5f')
 
 labels.to_numpy().tofile(csv_path+'labels.csv', sep=',', format='%10.5f')'''
 gmm = GMM(pca_feats,2).classify()
 
-sns.scatterplot(x=pca_feats[:,0],y=pca_feats[:,1],hue=gmm, s=1)
-plt.show()
+#sns.scatterplot(x=pca_feats[:,0],y=pca_feats[:,1],hue=gmm, s=1)
+#plt.show()
