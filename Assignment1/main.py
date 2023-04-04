@@ -15,14 +15,14 @@ n = list(range(1, n_feats+1))
 # df_cat = df.astype('category').values.codes
 
 
-def to_categorical(df):
+def to_categorical(df, label_key):
     df_cat = df.copy()
 
     for key in df.keys():
         df_cat[key] = df[key].astype('category').values.codes
         # print(df_cat[key].value_counts(), '\n')
 
-    labels = df_cat['default_ind']
+    labels = df_cat[label_key]
     df_cat = df_cat.iloc[:, :-1]
     return labels, df_cat
 
@@ -33,7 +33,7 @@ def reduce_dim(df, n):
     return pca.fit_transform(std_data, labels)
 
 
-labels, df_cat = to_categorical(df)
+labels, df_cat = to_categorical(df, 'default_ind')
 pca_feats = reduce_dim(df_cat, n)
 
 
