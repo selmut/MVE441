@@ -12,4 +12,4 @@ class kMeans:
 
     def classify(self):
         kmeans_classification = KMeans(n_clusters=self.num_clusters).fit_predict(self.pca_data)
-        pass
+        return kmeans_classification
