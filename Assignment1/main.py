@@ -5,6 +5,10 @@ from sklearn.preprocessing import StandardScaler
 from matplotlib import pyplot as plt
 from matplotlib import colors
 import numpy as np
+#from Assignment1.Classifiers.gmm import GMM
+from Classifiers.gmm import GMM
+from sklearn.model_selection import train_test_split
+import seaborn as sns
 
 data_path = os.path.join(os.path.dirname(__file__), 'data/data.csv')
 df = pd.read_csv(data_path)
@@ -32,11 +36,12 @@ def reduce_dim(df, n):
     pca = PCA(n_components=n, svd_solver='full')
     return pca.fit_transform(std_data, labels)
 
-
 labels, df_cat = to_categorical(df, 'default_ind')
-pca_feats = reduce_dim(df_cat, n)
-
-
+pca_feats = reduce_dim(df_cat, n[1])
+#split = train_test_split()
+pca_train_data, pca_test_data, label_train_data, label_test_data = train_test_split(pca_feats, labels, test_size=0.2)
+print(label_test_data.value_counts())
+print(label_train_data.value_counts())
 '''pca1 = pca_feats[:, 0]
 pca2 = pca_feats[:, 1]
 
@@ -50,4 +55,7 @@ csv_path = os.path.join(os.path.dirname(__file__), 'csv/')
 pca_feats.tofile(csv_path+'pca_feats.csv', sep=',', format='%10.5f')
 
 labels.to_numpy().tofile(csv_path+'labels.csv', sep=',', format='%10.5f')'''
+gmm = GMM(pca_feats,2).classify()
 
+sns.scatterplot(x=pca_feats[:,0],y=pca_feats[:,1],hue=gmm, s=1)
+plt.show()
