@@ -20,10 +20,10 @@ class CV:
 
 
 print('Reading data...')
-pca_feats = pd.read_csv('csv/pca_feats.csv').to_numpy()
-labels = pd.read_csv('csv/labels.csv').to_numpy()
+pca_test_labels = pd.read_csv('csv/pca_lable_test.csv')
+pca_test_data = pd.read_csv('csv/pca_test.csv')
 
 print('\nStarting cross-validation...')
-cv = CV(pca_feats, labels)
-cv.run_cv()
+'''cv = CV(pca_test_data, pca_test_labels)
+cv.run_cv()'''
 
