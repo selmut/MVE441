@@ -34,7 +34,14 @@ def reduce_dim(df, n):
 
 
 labels, df_cat = to_categorical(df, 'default_ind')
-pca_feats = reduce_dim(df_cat, n)
+pca_feats = reduce_dim(df_cat, n[1])
+
+
+
+
+
+
+
 
 
 '''pca1 = pca_feats[:, 0]
