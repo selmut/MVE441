@@ -6,27 +6,36 @@ from matplotlib import pyplot as plt
 from matplotlib import colors
 import numpy as np
 
-n = 3
-
 data_path = os.path.join(os.path.dirname(__file__), 'data/data.csv')
 df = pd.read_csv(data_path)
 
+n_feats = len(df.keys())
+n = list(range(1, n_feats+1))
+
 # df_cat = df.astype('category').values.codes
-df_cat = df.copy()
 
-for key in df.keys():
-    df_cat[key] = df[key].astype('category').values.codes
-    # print(df_cat[key].value_counts(), '\n')
 
-labels = df_cat['default_ind']
-df_cat = df_cat.iloc[:, :-1]
+def to_categorical(df):
+    df_cat = df.copy()
 
-std_data = StandardScaler().fit_transform(df_cat)
+    for key in df.keys():
+        df_cat[key] = df[key].astype('category').values.codes
+        # print(df_cat[key].value_counts(), '\n')
 
-# print(std_data, np.shape(std_data))
+    labels = df_cat['default_ind']
+    df_cat = df_cat.iloc[:, :-1]
+    return labels, df_cat
 
-pca = PCA(n_components=n, svd_solver='full')
-pca_feats = pca.fit_transform(std_data, labels)
+
+def reduce_dim(df, n):
+    std_data = StandardScaler().fit_transform(df)
+    pca = PCA(n_components=n, svd_solver='full')
+    return pca.fit_transform(std_data, labels)
+
+
+labels, df_cat = to_categorical(df)
+pca_feats = reduce_dim(df_cat, n)
+
 
 '''pca1 = pca_feats[:, 0]
 pca2 = pca_feats[:, 1]
