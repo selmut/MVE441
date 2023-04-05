@@ -40,7 +40,7 @@ def reduce_dim(df, n):
 labels, df_cat = to_categorical(df, 'default_ind')
 pca_feats = reduce_dim(df_cat, n[1])
 
-pca_train_data, pca_test_data, pca_train_labels, pca_test_labels = train_test_split(pca_feats, labels, test_size=0.2)
+pca_train_data, pca_test_data, pca_train_labels, pca_test_labels = train_test_split(pca_feats, labels, test_size=0.2, stratify=labels)
 
 csv_path = os.path.join(os.path.dirname(__file__), 'csv/')
 
