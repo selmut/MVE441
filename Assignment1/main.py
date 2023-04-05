@@ -9,12 +9,13 @@ import numpy as np
 from Classifiers.gmm import GMM
 from sklearn.model_selection import train_test_split
 import seaborn as sns
+from cross_valid import CV
 
 data_path = os.path.join(os.path.dirname(__file__), 'data/data.csv')
 df = pd.read_csv(data_path)
 
 n_feats = len(df.keys())
-n = list(range(1, n_feats+1))
+n_list = list(range(1, n_feats+1))
 
 # df_cat = df.astype('category').values.codes
 
@@ -37,17 +38,30 @@ def reduce_dim(df, n):
     return pca.fit_transform(std_data, labels)
 
 
-labels, df_cat = to_categorical(df, 'default_ind')
-pca_feats = reduce_dim(df_cat, n[1])
+## performs CV for all number of features in PCA with GMM
 
-pca_train_data, pca_test_data, pca_train_labels, pca_test_labels = train_test_split(pca_feats, labels, test_size=0.2, stratify=labels)
+gmm = GMM(2)
+avg_scores_gmm = np.zeros([n_feats,4])
+for n in n_list:
+    print("feat. {} out of {}".format(n,n_feats))
+    labels, df_cat = to_categorical(df, 'default_ind')
+    pca_feats = reduce_dim(df_cat, n)
 
+    pca_train_data, pca_test_data, pca_train_labels, pca_test_labels = train_test_split(pd.DataFrame(pca_feats),pd.DataFrame(labels), 
+                                                                                        test_size=0.2, stratify=labels)
+
+    cv = CV(pca_test_data, pca_test_labels, 10, gmm)
+    avg_scores_gmm[n,:] = cv.run_cv()
+
+print(avg_scores_gmm)
+
+'''
 csv_path = os.path.join(os.path.dirname(__file__), 'csv/')
-
 pd.DataFrame(pca_train_data).to_csv(csv_path+'train_data.csv', header=False, index=False)
 pd.DataFrame(pca_train_labels).to_csv(csv_path+'train_labels.csv', header=False, index=False)
 pd.DataFrame(pca_test_data).to_csv(csv_path+'test_data.csv', header=False, index=False)
 pd.DataFrame(pca_test_labels).to_csv(csv_path+'test_labels.csv', header=False, index=False)
+'''
 
 '''pca1 = pca_feats[:, 0]
 pca2 = pca_feats[:, 1]
