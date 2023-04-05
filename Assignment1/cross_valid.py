@@ -12,16 +12,16 @@ class CV:
         self.folds = folds
         self.classifier = classifier
 
-    @staticmethod
-    def metrics(predicted_labels, true_labels):
+    #@staticmethod
+    def metrics(self,predicted_labels, true_labels):
         conf_mat = confusion_matrix(true_labels, predicted_labels)
         acc = accuracy_score(true_labels, predicted_labels)
         f1 = f1_score(true_labels, predicted_labels)
         precision = precision_score(true_labels, predicted_labels)
         roc_auc = roc_auc_score(true_labels, predicted_labels)
 
-        fpr, tpr = roc_curve(true_labels, predicted_labels)
-        return conf_mat, [acc, f1, precision, roc_auc], [fpr, tpr]
+        fpr, tpr, thresholds = roc_curve(true_labels, predicted_labels)
+        return conf_mat, [acc, f1, precision, roc_auc], [fpr, tpr, thresholds]
 
     def run_cv(self):
         skf = StratifiedKFold(n_splits=self.folds, shuffle=True)
@@ -38,8 +38,11 @@ class CV:
             current_train_fold = data.iloc[train_index]
 
             model = self.classifier.fit_data(current_train_fold, current_train_fold_labels)
-            # predicted_labels = self.classifier.predict(current_test_fold, current_test_fold_labels, model)
+            predicted_labels = self.classifier.predict(current_test_fold, current_test_fold_labels, model)
+            conf_mat, scores, rates = self.metrics(current_test_fold_labels,predicted_labels)
+            print("Scores: \n", scores)
 
+            
 
 print('Reading data...')
 pca_test_labels = pd.read_csv('csv/test_labels.csv', header=None)
