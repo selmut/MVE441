@@ -4,13 +4,14 @@ import pandas as pd
 
 
 class GMM:
-    def __init__(self, pca_data, num_classes):
-        self.pca_data = pca_data
+    def __init__(self, num_classes):
         self.num_classes = num_classes
 
     #def read_pca(self, path):
     #    self.pca_data = pd.read_csv(path).to_numpy()
 
-    def classify(self):
-        gmm_classification = GaussianMixture(n_components=self.num_classes).fit_predict(self.pca_data)
-        return gmm_classification
+    def fit_data(self, train_data, train_labels):
+        return GaussianMixture(n_components=self.num_classes).fit(train_data)
+
+    def predict(self, test_data, test_labels, model):
+        return model.predict(test_data)
