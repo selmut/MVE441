@@ -3,6 +3,7 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, f1_score, roc_auc_score, roc_curve
 from Classifiers.gmm import GMM
 import numpy as np
+from collections import Counter
 
 
 class CV:
@@ -16,17 +17,19 @@ class CV:
     def metrics(self,predicted_labels, true_labels):
         conf_mat = confusion_matrix(true_labels, predicted_labels)
         acc = accuracy_score(true_labels, predicted_labels)
-        f1 = f1_score(true_labels, predicted_labels)
+        f1 = f1_score(true_labels, predicted_labels) #good score to consider since it is adjusted to imbalanced data sets, which we have
         precision = precision_score(true_labels, predicted_labels)
         roc_auc = roc_auc_score(true_labels, predicted_labels)
 
         fpr, tpr, thresholds = roc_curve(true_labels, predicted_labels)
         return conf_mat, [acc, f1, precision, roc_auc], [fpr, tpr, thresholds]
+        #return conf_mat, [acc, f1, precision], [fpr, tpr, thresholds]
 
     def run_cv(self):
         skf = StratifiedKFold(n_splits=self.folds, shuffle=True)
         data = self.test_data
         labels = self.test_labels
+        skf.get_n_splits(data, labels)
 
         avg_scores = np.zeros([1,4])
 
@@ -36,10 +39,13 @@ class CV:
 
             current_train_fold_labels = labels.iloc[train_index]
             current_train_fold = data.iloc[train_index]
-
+            
+            #values, counts = np.unique(current_test_fold_labels, return_counts=True)
+            #print(counts)
+            
             model = self.classifier.fit_data(current_train_fold, current_train_fold_labels)
             predicted_labels = self.classifier.predict(current_test_fold, current_test_fold_labels, model)
-            conf_mat, scores, rates = self.metrics(current_test_fold_labels,predicted_labels)
+            conf_mat, scores, rates = self.metrics(predicted_labels,current_test_fold_labels)
             avg_scores += scores
             #print("\nScores: \n", scores)
             #print("Average scores: \n", avg_scores/self.folds)
