@@ -94,7 +94,7 @@ for n in n_list:
     avg_scores_gmm[n-1,:] = cv_gmm.run_cv()
     avg_scores_kmeans[n-1,:] = cv_kmeans.run_cv()
     avg_scores_knn[n-1,:] = cv_knn.run_cv()
-    print(avg_scores_knn[n-1,:])
+    #print(avg_scores_knn[n-1,:])
 
 
 # saves plots of the scores for the different classifiers
