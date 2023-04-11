@@ -13,7 +13,6 @@ class CV:
         self.folds = folds
         self.classifier = classifier
 
-    #@staticmethod
     def metrics(self,predicted_labels, true_labels):
         conf_mat = confusion_matrix(true_labels, predicted_labels)
         acc = accuracy_score(true_labels, predicted_labels)
@@ -23,7 +22,6 @@ class CV:
 
         fpr, tpr, thresholds = roc_curve(true_labels, predicted_labels)
         return conf_mat, [acc, f1, precision, roc_auc], [fpr, tpr, thresholds]
-        #return conf_mat, [acc, f1, precision], [fpr, tpr, thresholds]
 
     def run_cv(self):
         skf = StratifiedKFold(n_splits=self.folds, shuffle=True)
@@ -47,10 +45,6 @@ class CV:
             predicted_labels = self.classifier.predict(current_test_fold, current_test_fold_labels, model)
             conf_mat, scores, rates = self.metrics(predicted_labels,current_test_fold_labels)
             avg_scores += scores
-            #print("\nScores: \n", scores)
-            #print("Average scores: \n", avg_scores/self.folds)
-            #print("Rates: \n", rates)
-            #print("Confusion matrix: \n", conf_mat)
         
         return avg_scores/self.folds
 
