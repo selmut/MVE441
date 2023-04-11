@@ -16,24 +16,24 @@ from cross_valid import CV
 
 warnings.filterwarnings("ignore")
 
-## original data
+# original data
 def read_original_data():
     data_path = os.path.join(os.path.dirname(__file__), 'data/data.csv')
     return pd.read_csv(data_path)
 
-## subset of original data
+# subset of original data
 def read_sub_data():
     subdata_path = os.path.join(os.path.dirname(__file__), 'data/subdata.csv')
     return pd.read_csv(subdata_path)
     
-## generate a new csv, stratified subset of original of 1% size
+# generate a new csv, stratified subset of original of 1% size
 def generate_sub_data(df):
     subdf = df.groupby('default_ind', group_keys=False).apply(lambda x: x.sample(frac=0.01))
     subdata_path = os.path.join(os.path.dirname(__file__), 'data/subdata.csv')
     pd.DataFrame(subdf).to_csv(subdata_path, header=True, index=False)
     print("Subset of data is generated!\n")
 
-#generate_sub_data(read_original_data())
+# generate_sub_data(read_original_data())
 df = read_original_data()
 df_sub = read_sub_data()
 
@@ -64,7 +64,7 @@ def reduce_dim(df, n):
 def metrics(predicted_labels, true_labels):
     conf_mat = confusion_matrix(true_labels, predicted_labels)
     acc = accuracy_score(true_labels, predicted_labels)
-    f1 = f1_score(true_labels, predicted_labels) #good score to consider since it is adjusted to imbalanced data sets, which we have
+    f1 = f1_score(true_labels, predicted_labels)  # good score to consider since it is adjusted to imbalanced data sets, which we have
     precision = precision_score(true_labels, predicted_labels)
     roc_auc = roc_auc_score(true_labels, predicted_labels)
     fpr, tpr, thresholds = roc_curve(true_labels, predicted_labels)
@@ -154,18 +154,12 @@ def run_classification_each_pca_dim(df, n_feats):
 
 
 # Run our 
-def run_classification(df):
+def run_classification(train_data, test_data, train_labels, test_labels):
     print("starting classification on full data set...")
     gmm = GMM(2)
     kmeans = kMeans(2)
     neighbors = 10
     knn = KNN(neighbors)
-
-    # converts the data to categorical data 
-    labels, df_cat = to_categorical(df, 'default_ind')
-    # splits into test and train data
-    train_data, test_data, train_labels, test_labels = train_test_split(pd.DataFrame(df_cat),pd.DataFrame(labels), 
-                                                                        test_size=0.2, stratify=labels)
     
     print('Starting GMM...')
     gmm_model = gmm.fit_data(train_data, train_labels)
@@ -189,9 +183,21 @@ def run_classification(df):
     print("\nKNN scores on dataset: ",knn_scores)
 
 
-#run_classification_each_pca_dim(df_sub, 3)
-run_classification(df)
+# converts the data to categorical data
+labels, df_cat = to_categorical(df, 'default_ind')
+# splits into test and train data
+train_data, test_data, train_labels, test_labels = train_test_split(pd.DataFrame(df_cat),pd.DataFrame(labels),
+                                                                        test_size=0.2, stratify=labels)
+run_classification(train_data, test_data, train_labels, test_labels)
 
+# converts the data to categorical data and performs pca
+pca_feats = reduce_dim(df_cat, 8)
+
+# splits into test and train data
+pca_train_data, pca_test_data, pca_train_labels, pca_test_labels = train_test_split(pd.DataFrame(pca_feats),
+                                                                                    pd.DataFrame(labels),
+                                                                                    test_size=0.2, stratify=labels)
+run_classification(pca_train_data, pca_test_data, pca_train_labels, pca_test_labels)
 
 '''
 csv_path = os.path.join(os.path.dirname(__file__), 'csv/')
