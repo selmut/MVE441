@@ -33,6 +33,7 @@ def generate_sub_data(df):
     pd.DataFrame(subdf).to_csv(subdata_path, header=True, index=False)
     print("Subset of data is generated!\n")
 
+
 # generate_sub_data(read_original_data())
 df = read_original_data()
 df_sub = read_sub_data()
@@ -59,7 +60,7 @@ def reduce_dim(df, n):
     std_data = StandardScaler().fit_transform(df)
     pca = PCA(n_components=n, svd_solver='full')
     return pca.fit_transform(std_data)
-    #return pca.fit_transform(std_data, labels)
+    # return pca.fit_transform(std_data, labels)
 
 def metrics(predicted_labels, true_labels):
     conf_mat = confusion_matrix(true_labels, predicted_labels)
@@ -107,7 +108,7 @@ def run_classification_each_pca_dim(df, n_feats):
 
     # loops through all possible number of features of pca
     for n in n_list:
-    #for n in range(1,2):
+    # for n in range(1,2):
         print("feat. {} out of {}...".format(n,n_feats-1))
 
         # converts the data to categorical data and performs pca 
@@ -129,7 +130,6 @@ def run_classification_each_pca_dim(df, n_feats):
         avg_scores_kmeans[n-1,:] = cv_kmeans.run_cv()
         avg_scores_knn[n-1,:] = cv_knn.run_cv()
         #print(avg_scores_knn[n-1,:])
-
 
     plot_scores(avg_scores_gmm, 'GMM')
     plot_scores(avg_scores_kmeans, 'KMeans')
@@ -155,49 +155,90 @@ def run_classification_each_pca_dim(df, n_feats):
 
 # Run our 
 def run_classification(train_data, test_data, train_labels, test_labels):
-    print("starting classification on full data set...")
+    # print("starting classification on full data set...")
     gmm = GMM(2)
     kmeans = kMeans(2)
     neighbors = 10
+    nRuns = 5
     knn = KNN(neighbors)
     
-    print('Starting GMM...')
-    gmm_model = gmm.fit_data(train_data, train_labels)
-    gmm_predictions = gmm.predict(test_data,test_labels, gmm_model)
-    gmm_conf_mat, gmm_scores, gmm_rates = metrics(gmm_predictions, test_labels)
+    print('Starting GMM...\n')
+    scores_matrix = np.zeros((nRuns, 4))
 
-    print('Starting kMeans...')
-    kmeans_model = kmeans.fit_data(train_data, train_labels)
-    kmeans_predictions = kmeans.predict(test_data,test_labels, kmeans_model)
-    kmeans_conf_mat, kmeans_scores, kmeans_rates = metrics(kmeans_predictions, test_labels)
+    for n in range(nRuns):
+        print(f'GMM run nr. {n}...')
+        gmm_model = gmm.fit_data(train_data, train_labels)
+        gmm_predictions = gmm.predict(test_data, test_labels, gmm_model)
+        gmm_conf_mat, gmm_scores, gmm_rates = metrics(gmm_predictions, test_labels)
 
-    print('Starting KNN...')
-    knn_model = knn.fit_data(train_data, train_labels)
-    knn_predictions = knn.predict(test_data,test_labels, knn_model)
-    knn_conf_mat, knn_scores, knn_rates = metrics(knn_predictions, test_labels)
+        scores_matrix[n, :] = gmm_scores
 
-    
+    avg_gmm_scores = np.sum(scores_matrix, axis=0)/nRuns
+
+    print('Starting kMeans...\n')
+    scores_matrix = np.zeros((nRuns, 4))
+
+    for n in range(nRuns):
+        print(f'kMeans run nr. {n}...')
+        kmeans_model = kmeans.fit_data(train_data, train_labels)
+        kmeans_predictions = kmeans.predict(test_data, test_labels, kmeans_model)
+        kmeans_conf_mat, kmeans_scores, kmeans_rates = metrics(kmeans_predictions, test_labels)
+
+        scores_matrix[n, :] = kmeans_scores
+
+    avg_kmeans_scores = np.sum(scores_matrix, axis=0)/nRuns
+
+    '''print('Starting KNN...\n')
+    scores_matrix = np.zeros((nRuns, 4))
+
+    for n in range(nRuns):
+        print(f'KNN run nr. {n}...')
+        knn_model = knn.fit_data(train_data, train_labels)
+        knn_predictions = knn.predict(test_data, test_labels, knn_model)
+        knn_conf_mat, knn_scores, knn_rates = metrics(knn_predictions, test_labels)
+
+        scores_matrix[n, :] = knn_scores
+
+    avg_knn_scores = np.sum(scores_matrix, axis=0)/nRuns'''
+    avg_knn_scores = np.zeros(4)
+
     # stores the average score of CV
-    print("GMM scores on dataset: ",gmm_scores)
-    print("\nKMeans scores on dataset: ",kmeans_scores)
-    print("\nKNN scores on dataset: ",knn_scores)
+    print("GMM scores on dataset: ", avg_gmm_scores)
+    print("\nKMeans scores on dataset: ", avg_kmeans_scores)
+    print("\nKNN scores on dataset: ", avg_knn_scores)
+
+    return avg_gmm_scores, avg_kmeans_scores, avg_knn_scores
 
 
 # converts the data to categorical data
 labels, df_cat = to_categorical(df, 'default_ind')
 # splits into test and train data
-train_data, test_data, train_labels, test_labels = train_test_split(pd.DataFrame(df_cat),pd.DataFrame(labels),
-                                                                        test_size=0.2, stratify=labels)
-run_classification(train_data, test_data, train_labels, test_labels)
+train_data, test_data, train_labels, test_labels = train_test_split(pd.DataFrame(df_cat), pd.DataFrame(labels),
+                                                                    test_size=0.2, stratify=labels)
+# run_classification(train_data, test_data, train_labels, test_labels)
 
-# converts the data to categorical data and performs pca
-pca_feats = reduce_dim(df_cat, 8)
+pca_dim = np.arange(10)+1
+gmm_scores = np.zeros((10, 4))
+kmeans_scores = np.zeros((10, 4))
+knn_scores = np.zeros((10, 4))
 
-# splits into test and train data
-pca_train_data, pca_test_data, pca_train_labels, pca_test_labels = train_test_split(pd.DataFrame(pca_feats),
+for i in range(len(pca_dim)):
+    print(f'\nPCA dimension {pca_dim[i]}...')
+    # converts the data to categorical data and performs pca
+    pca_feats = reduce_dim(df_cat, pca_dim[i])
+
+    # splits into test and train data
+    pca_train_data, pca_test_data, pca_train_labels, pca_test_labels = train_test_split(pd.DataFrame(pca_feats),
                                                                                     pd.DataFrame(labels),
                                                                                     test_size=0.2, stratify=labels)
-run_classification(pca_train_data, pca_test_data, pca_train_labels, pca_test_labels)
+    avg_gmm_scores, avg_kmeans_scores, avg_knn_scores = run_classification(pca_train_data, pca_test_data, pca_train_labels, pca_test_labels)
+    gmm_scores[i, :] = avg_gmm_scores
+    kmeans_scores[i, :] = avg_kmeans_scores
+    knn_scores[i, :] = avg_knn_scores
+
+print(gmm_scores)   # dim 16 is optimal
+print(kmeans_scores)   # dim 23 is optimal
+print(knn_scores)   # dim 9 is optimal
 
 '''
 csv_path = os.path.join(os.path.dirname(__file__), 'csv/')
