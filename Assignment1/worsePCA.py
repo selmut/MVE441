@@ -33,11 +33,6 @@ pca_data=pca.fit_transform(std_data)
 r=pca.components_.flatten()
 
 
-c = ['tab:blue', 'tab:orange']
-plt.scatter(data[:,0],data[:,1], c=labels, s=5, cmap=colors.ListedColormap(c))
-plt.show()
-plt.scatter(pca_data*r[0],pca_data*r[1] , c=labels, s=5, cmap=colors.ListedColormap(c))
-plt.show()
 
 gmm = GMM(2)
 kmeans = kMeans(2)
@@ -58,3 +53,9 @@ print("\nScores without pca")
 print(CV(ted, tel, 7, gmm).run_cv())
 print(CV(ted, tel, 7, kmeans).run_cv())
 print(CV(ted, tel, 7, knn).run_cv())
+
+c = ['tab:blue', 'tab:orange']
+plt.scatter(data[:,0],data[:,1], c=labels, s=5, cmap=colors.ListedColormap(c))
+plt.show()
+plt.scatter(pca_data*r[0],pca_data*r[1] , c=labels, s=5, cmap=colors.ListedColormap(c))
+plt.show()

@@ -21,7 +21,7 @@ variance = 2
 # Generate dependent data
 data = np.zeros((num_points, num_dims))
 data[:,0] = np.sqrt(variance)*np.random.randn(num_points)
-labels = np.floor(np.random.uniform(0.5, 1.5, num_points))
+labels = np.random.randint(0,2,num_points)
 data[:,-1] = labels
 alpha = np.random.uniform(0,1,num_dims)
 
