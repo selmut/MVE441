@@ -10,22 +10,27 @@ import numpy as np
 from Classifiers.gmm import GMM
 from Classifiers.kmeans import kMeans
 from Classifiers.knn import KNN
+from Classifiers.lda import LDA
+from Classifiers.qda import QDA
 from sklearn.model_selection import train_test_split
 import seaborn as sns
 from cross_valid import CV
 
 warnings.filterwarnings("ignore")
 
+
 # original data
 def read_original_data():
     data_path = os.path.join(os.path.dirname(__file__), 'data/data.csv')
     return pd.read_csv(data_path)
 
+
 # subset of original data
 def read_sub_data():
     subdata_path = os.path.join(os.path.dirname(__file__), 'data/subdata.csv')
     return pd.read_csv(subdata_path)
-    
+
+
 # generate a new csv, stratified subset of original of 1% size
 def generate_sub_data(df):
     subdf = df.groupby('default_ind', group_keys=False).apply(lambda x: x.sample(frac=0.01))
@@ -43,6 +48,7 @@ n_feats = len(df.keys())
 
 # df_cat = df.astype('category').values.codes
 
+
 # converts our dataframe to categorical dataframe
 def to_categorical(df, label_key):
     df_cat = df.copy()
@@ -55,12 +61,14 @@ def to_categorical(df, label_key):
     df_cat = df_cat.iloc[:, :-1]
     return labels, df_cat
 
+
 # normalizes and centers the data and then performs pca
 def reduce_dim(df, n):
     std_data = StandardScaler().fit_transform(df)
     pca = PCA(n_components=n, svd_solver='full')
     return pca.fit_transform(std_data)
     # return pca.fit_transform(std_data, labels)
+
 
 def metrics(predicted_labels, true_labels):
     conf_mat = confusion_matrix(true_labels, predicted_labels)
@@ -96,15 +104,19 @@ def plot_scores(scores, classifier):
 def run_classification_each_pca_dim(df, n_feats):
     # constructs all classifiers
     n_list = list(range(1, n_feats))
-    gmm = GMM(2)
-    kmeans = kMeans(2)
+    # gmm = GMM(2)
+    # kmeans = kMeans(2)
     neighbors = 10
     knn = KNN(neighbors)
+    lda = LDA()
+    qda = QDA()
 
     # stores average scores for each classifier for each number of pca features 
-    avg_scores_gmm = np.zeros([n_feats-1,4])
-    avg_scores_kmeans = np.zeros([n_feats-1,4])
+    # avg_scores_gmm = np.zeros([n_feats-1,4])
+    # avg_scores_kmeans = np.zeros([n_feats-1,4])
     avg_scores_knn = np.zeros([n_feats-1,4])
+    avg_scores_lda = np.zeros([n_feats - 1, 4])
+    avg_scores_qda = np.zeros([n_feats - 1, 4])
 
     # loops through all possible number of features of pca
     for n in n_list:
@@ -121,14 +133,18 @@ def run_classification_each_pca_dim(df, n_feats):
                                                                                             test_size=0.2, stratify=labels)
 
         # performs CV for each classifier
-        cv_gmm = CV(pca_test_data, pca_test_labels, 7, gmm)
-        cv_kmeans = CV(pca_test_data, pca_test_labels, 7, kmeans)
+        # cv_gmm = CV(pca_test_data, pca_test_labels, 7, gmm)
+        # cv_kmeans = CV(pca_test_data, pca_test_labels, 7, kmeans)
         cv_knn = CV(pca_test_data, pca_test_labels, 7, knn)
+        cv_lda = CV(pca_test_data, pca_test_labels, 7, lda)
+        cv_qda = CV(pca_test_data, pca_test_labels, 7, qda)
 
         # stores the average score of CV
-        avg_scores_gmm[n-1,:] = cv_gmm.run_cv()
-        avg_scores_kmeans[n-1,:] = cv_kmeans.run_cv()
-        avg_scores_knn[n-1,:] = cv_knn.run_cv()
+        # avg_scores_gmm[n-1,:] = cv_gmm.run_cv()
+        # avg_scores_kmeans[n-1,:] = cv_kmeans.run_cv()
+        avg_scores_knn[n - 1, :] = cv_knn.run_cv()
+        avg_scores_lda[n - 1, :] = cv_lda.run_cv()
+        avg_scores_qda[n-1, :] = cv_qda.run_cv()
         #print(avg_scores_knn[n-1,:])
 
     plot_scores(avg_scores_gmm, 'GMM')
