@@ -1,8 +1,8 @@
 import numpy as np
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
-from Classifiers.gmm import GMM
-from Classifiers.kmeans import kMeans
+from Classifiers.qda import QDA
+from Classifiers.lda import LDA
 from Classifiers.knn import KNN
 from sklearn.model_selection import train_test_split
 from matplotlib import colors
@@ -42,8 +42,8 @@ plt.show()
 plt.scatter(pca_data[:,0], pca_data[:,1], c=labels, s=5, cmap=colors.ListedColormap(c))
 plt.show()
 
-gmm = GMM(2)
-kmeans = kMeans(2)
+qda = QDA()
+lda = LDA()
 knn = KNN(10)
 
 train_data, test_data, train_labels, test_labels = train_test_split(pd.DataFrame(pca_data),pd.DataFrame(labels), 
@@ -53,11 +53,11 @@ train_data, test_data, train_labels, test_labels = train_test_split(pd.DataFrame
 trd, ted, trl, tel = train_test_split(pd.DataFrame(data),pd.DataFrame(labels), 
                                         test_size=0.2, stratify=labels)
 print("Scores with pca")
-print(CV(test_data, test_labels, 7, gmm).run_cv())
-print(CV(test_data, test_labels, 7, kmeans).run_cv())
+print(CV(test_data, test_labels, 7, qda).run_cv())
+print(CV(test_data, test_labels, 7, lda).run_cv())
 print(CV(test_data, test_labels, 7, knn).run_cv())
 
 print("\nScores without pca")
-print(CV(ted, tel, 7, gmm).run_cv())
-print(CV(ted, tel, 7, kmeans).run_cv())
+print(CV(ted, tel, 7, qda).run_cv())
+print(CV(ted, tel, 7, lda).run_cv())
 print(CV(ted, tel, 7, knn).run_cv())
