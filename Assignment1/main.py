@@ -147,12 +147,14 @@ def run_classification_each_pca_dim(df, n_feats):
         avg_scores_qda[n-1, :] = cv_qda.run_cv()
         #print(avg_scores_knn[n-1,:])
 
-    plot_scores(avg_scores_gmm, 'GMM')
-    plot_scores(avg_scores_kmeans, 'KMeans')
+    # plot_scores(avg_scores_gmm, 'GMM')
+    # plot_scores(avg_scores_kmeans, 'KMeans')
     plot_scores(avg_scores_knn, 'KNN')
+    plot_scores(avg_scores_lda, 'LDA')
+    plot_scores(avg_scores_qda, 'QDA')
 
     # prints index of maximum scores
-    print("gmm max Acc: ", np.argmax(avg_scores_gmm[:,0]))
+    '''print("gmm max Acc: ", np.argmax(avg_scores_gmm[:,0]))
     print("gmm max F1: ", np.argmax(avg_scores_gmm[:,1]))
     print("gmm max Precision: ", np.argmax(avg_scores_gmm[:,2]))
     print("gmm max AUC: ", np.argmax(avg_scores_gmm[:,3]))
@@ -160,7 +162,7 @@ def run_classification_each_pca_dim(df, n_feats):
     print("kmeans max Acc: ", np.argmax(avg_scores_kmeans[:,0]))
     print("kmeans max F1: ", np.argmax(avg_scores_kmeans[:,1]))
     print("kmeans max Precision: ", np.argmax(avg_scores_kmeans[:,2]))
-    print("kmeans max AUC: ", np.argmax(avg_scores_kmeans[:,3]))
+    print("kmeans max AUC: ", np.argmax(avg_scores_kmeans[:,3]))'''
 
     print("knn max Acc: ", np.argmax(avg_scores_knn[:,0]))
     print("knn max F1: ", np.argmax(avg_scores_knn[:,1]))
@@ -168,17 +170,31 @@ def run_classification_each_pca_dim(df, n_feats):
     print("knn max AUC: ", np.argmax(avg_scores_knn[:,3]))
     print("[Accuracy    F1    Precision    AUC]")
 
+    print("lda max Acc: ", np.argmax(avg_scores_lda[:,0]))
+    print("lda max F1: ", np.argmax(avg_scores_lda[:,1]))
+    print("lda max Precision: ", np.argmax(avg_scores_lda[:,2]))
+    print("lda max AUC: ", np.argmax(avg_scores_lda[:,3]))
+    print("[Accuracy    F1    Precision    AUC]")
+
+    print("qda max Acc: ", np.argmax(avg_scores_qda[:,0]))
+    print("qda max F1: ", np.argmax(avg_scores_qda[:,1]))
+    print("qda max Precision: ", np.argmax(avg_scores_qda[:,2]))
+    print("qda max AUC: ", np.argmax(avg_scores_qda[:,3]))
+    print("[Accuracy    F1    Precision    AUC]")
+
 
 # Run our 
 def run_classification(train_data, test_data, train_labels, test_labels):
     # print("starting classification on full data set...")
-    gmm = GMM(2)
-    kmeans = kMeans(2)
+    # gmm = GMM(2)
+    # kmeans = kMeans(2)
     neighbors = 10
     nRuns = 5
     knn = KNN(neighbors)
+    lda = LDA()
+    qda = QDA()
     
-    print('Starting GMM...\n')
+    '''print('Starting GMM...\n')
     scores_matrix = np.zeros((nRuns, 4))
 
     for n in range(nRuns):
@@ -202,7 +218,7 @@ def run_classification(train_data, test_data, train_labels, test_labels):
 
         scores_matrix[n, :] = kmeans_scores
 
-    avg_kmeans_scores = np.sum(scores_matrix, axis=0)/nRuns
+    avg_kmeans_scores = np.sum(scores_matrix, axis=0)/nRuns'''
 
     '''print('Starting KNN...\n')
     scores_matrix = np.zeros((nRuns, 4))
@@ -218,12 +234,38 @@ def run_classification(train_data, test_data, train_labels, test_labels):
     avg_knn_scores = np.sum(scores_matrix, axis=0)/nRuns'''
     avg_knn_scores = np.zeros(4)
 
+    print('Starting LDA...\n')
+    scores_matrix = np.zeros((nRuns, 4))
+
+    for n in range(nRuns):
+        print(f'LDA run nr. {n}...')
+        lda_model = lda.fit_data(train_data, train_labels)
+        lda_predictions = lda.predict(test_data, test_labels, lda_model)
+        lda_conf_mat, lda_scores, lda_rates = metrics(lda_predictions, test_labels)
+
+        scores_matrix[n, :] = lda_scores
+
+    avg_lda_scores = np.sum(scores_matrix, axis=0) / nRuns
+
+    print('Starting QDA...\n')
+    scores_matrix = np.zeros((nRuns, 4))
+
+    for n in range(nRuns):
+        print(f'QDA run nr. {n}...')
+        qda_model = qda.fit_data(train_data, train_labels)
+        qda_predictions = qda.predict(test_data, test_labels, qda_model)
+        qda_conf_mat, qda_scores, qda_rates = metrics(qda_predictions, test_labels)
+
+        scores_matrix[n, :] = qda_scores
+
+    avg_qda_scores = np.sum(scores_matrix, axis=0) / nRuns
+
     # stores the average score of CV
-    print("GMM scores on dataset: ", avg_gmm_scores)
-    print("\nKMeans scores on dataset: ", avg_kmeans_scores)
+    print("LDA scores on dataset: ", avg_lda_scores)
+    print("\nQDA scores on dataset: ", avg_qda_scores)
     print("\nKNN scores on dataset: ", avg_knn_scores)
 
-    return avg_gmm_scores, avg_kmeans_scores, avg_knn_scores
+    return avg_lda_scores, avg_qda_scores, avg_knn_scores
 
 
 # converts the data to categorical data
@@ -234,8 +276,8 @@ train_data, test_data, train_labels, test_labels = train_test_split(pd.DataFrame
 # run_classification(train_data, test_data, train_labels, test_labels)
 
 pca_dim = np.arange(10)+1
-gmm_scores = np.zeros((10, 4))
-kmeans_scores = np.zeros((10, 4))
+lda_scores = np.zeros((10, 4))
+qda_scores = np.zeros((10, 4))
 knn_scores = np.zeros((10, 4))
 
 for i in range(len(pca_dim)):
@@ -247,13 +289,13 @@ for i in range(len(pca_dim)):
     pca_train_data, pca_test_data, pca_train_labels, pca_test_labels = train_test_split(pd.DataFrame(pca_feats),
                                                                                     pd.DataFrame(labels),
                                                                                     test_size=0.2, stratify=labels)
-    avg_gmm_scores, avg_kmeans_scores, avg_knn_scores = run_classification(pca_train_data, pca_test_data, pca_train_labels, pca_test_labels)
-    gmm_scores[i, :] = avg_gmm_scores
-    kmeans_scores[i, :] = avg_kmeans_scores
+    avg_lda_scores, avg_qda_scores, avg_knn_scores = run_classification(pca_train_data, pca_test_data, pca_train_labels, pca_test_labels)
+    lda_scores[i, :] = avg_lda_scores
+    qda_scores[i, :] = avg_qda_scores
     knn_scores[i, :] = avg_knn_scores
 
-print(gmm_scores)   # dim 16 is optimal
-print(kmeans_scores)   # dim 23 is optimal
+print(lda_scores)   # dim ? is optimal
+print(qda_scores)   # dim ? is optimal
 print(knn_scores)   # dim 9 is optimal
 
 '''
