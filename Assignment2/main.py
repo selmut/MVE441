@@ -2,12 +2,14 @@ import os
 import pandas as pd
 import warnings
 import math
+from sklearn import preprocessing
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from sklearn.feature_selection import VarianceThreshold, SelectKBest, SequentialFeatureSelector
 from matplotlib import pyplot as plt
 from sklearn.neighbors import KNeighborsClassifier
 from matplotlib import colors
+from cross_valid import CV
 from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, f1_score, roc_auc_score, roc_curve
 import numpy as np
 from Classifiers.knn import KNN
@@ -29,8 +31,12 @@ path_cnd_label = os.path.join(os.path.dirname(__file__), 'data/Labels.csv')
 
 # 0 is a cat, 1 is a dog
 labels = pd.read_csv(path_cnd_label)
+labels_np = labels.to_numpy()
 # convert to values in [0,1]?
 data = pd.read_csv(path_cnd_data)
+data_np = data.to_numpy()
+
+df = pd.concat([data,labels], axis=1)
 
 # counts how many times each picture is mislabeled for each classifier
 def count_picture_mislabel_frequency(nRuns):
@@ -40,6 +46,7 @@ def count_picture_mislabel_frequency(nRuns):
     lda = LDA()
     qda = QDA()
     num_picture_missclassified = np.zeros((3,data.shape[0]))
+    avg_accuracy = np.zeros((1,3))
     for nruns in range(nRuns):
         print("Run {} out of {}...".format(nruns,nRuns))
         # split data
@@ -58,6 +65,9 @@ def count_picture_mislabel_frequency(nRuns):
         test_labels_np = np.asarray(test_labels)
         num_false = np.zeros((1,3))
 
+        avg_accuracy[0,0] += accuracy_score(knn_predictions, test_labels)/nRuns
+        avg_accuracy[0,1] += accuracy_score(lda_predictions, test_labels)/nRuns
+        avg_accuracy[0,2] += accuracy_score(qda_predictions, test_labels)/nRuns
         # counts number of times predicted wrong and stores index of mislabeled picture
         for i in range(test_data.shape[0]):
             # number of mislabels per classifier
@@ -78,21 +88,14 @@ def count_picture_mislabel_frequency(nRuns):
     #print("KNN {} missclassifications of out {} possible\n".format(int(num_false[0,0]), test_data.shape[0]))
     #print("LDA {} missclassifications of out {} possible\n".format(int(num_false[0,1]), test_data.shape[0]))
     #print("QDA {} missclassifications of out {} possible\n".format(int(num_false[0,2]), test_data.shape[0]))
-    return(num_picture_missclassified)
+    return(num_picture_missclassified, avg_accuracy)
 
-
-
-#print(count_picture_mislabel_frequency(nRuns = 100))
-
-#knn = KNeighborsClassifier(n_neighbors=5)
-#print("starting feature selection...")
-#sfs = SequentialFeatureSelector(knn, n_features_to_select=4, direction="backward")
-#print("fitting data accordingly...")
-#sfs.fit(data.iloc[:, :], labels)
-#print(sfs.get_support())
-#print(sfs.transform(data.iloc[:, :]).shape)
-#print(sfs.transform(data.iloc[:, 0:10]).shape)
-
+#mislabeled_freq, acc = count_picture_mislabel_frequency(nRuns = 20)
+#print("Avg. accuracy knn: ", acc[0,0])
+#print("Avg. accuracy lda: ", acc[0,1])
+#print("Avg. accuracy qda: ", acc[0,2])
+#print("mislabeled freq: \n", mislabeled_freq)
+#print(count_picture_mislabel_frequency(nRuns = 20))
 
 # converts a picture to 16 blocks of size 256. Ordered by coloumn then row
 def convert_to_blocks(vectorized_picture):
@@ -108,27 +111,96 @@ def convert_to_blocks(vectorized_picture):
     return blocks
 
 
+# normalizes and centers the data and then performs pca
+def reduce_dim(df, n):
+    std_data = StandardScaler().fit_transform(df)
+    pca = PCA(n_components=n, svd_solver='full')
+    return pca.fit_transform(std_data)
+
+def plot_scores(scores, classifier):
+    plt.figure()
+    plt.plot(scores)
+    plt.savefig(os.path.join(os.path.dirname(__file__), 'img/')+classifier+'_accuracy.png')
+    plt.close()
+
+#data_scaled = pd.DataFrame(preprocessing.scale(data),columns = data.columns) 
+#pca = PCA(n_components=5)
+#pca.fit_transform(data_scaled)
+#print(pd.DataFrame(pca.components_,columns=data_scaled.columns,index = ['PC-1','PC-2','PC-3','PC-4','PC-5']))
+
+def run_classification_each_pca_dim(df, n_feats):
+    # constructs all classifiers
+    n_list = list(range(1, n_feats))
+    neighbors = 10
+    knn = KNN(neighbors)
+    lda = LDA()
+    qda = QDA()
+
+    # stores average scores for each classifier for each number of pca features 
+    avg_accuracy_knn = np.zeros(n_feats)
+    avg_accuracy_lda = np.zeros(n_feats)
+    avg_accuracy_qda = np.zeros(n_feats)
+
+    # loops through all possible number of features of pca
+    for n in n_list:
+        print("feat. {} out of {}...".format(n,n_feats-1))
+
+        # converts the data to categorical data and performs pca 
+        pca_feats = reduce_dim(df, n)
+
+        # TODO use split data correctly, and get metrics using test_data/labels
+        # splits into test and train data
+        pca_train_data, pca_test_data, pca_train_labels, pca_test_labels = train_test_split(pd.DataFrame(pca_feats),pd.DataFrame(labels), 
+                                                                                            test_size=0.2, stratify=labels)
+
+        cv_knn = CV(pca_test_data, pca_test_labels, 7, knn)
+        cv_lda = CV(pca_test_data, pca_test_labels, 7, lda)
+        cv_qda = CV(pca_test_data, pca_test_labels, 7, qda)
+
+        # stores the average score of CV
+        avg_accuracy_knn[n] = cv_knn.run_cv()
+        avg_accuracy_lda[n] = cv_lda.run_cv()
+        avg_accuracy_qda[n] = cv_qda.run_cv()
+
+    # plot_scores(avg_scores_gmm, 'GMM')
+    # plot_scores(avg_scores_kmeans, 'KMeans')
+    plot_scores(avg_accuracy_knn, 'KNN')
+    plot_scores(avg_accuracy_lda, 'LDA')
+    plot_scores(avg_accuracy_qda, 'QDA')
+
+
 def flip_picture(vectorized_picture):
     pic_dim = int(math.sqrt(vectorized_picture.shape[0]))
     reshaped = np.reshape(np.asarray(vectorized_picture), (pic_dim,pic_dim))
     flipped_picture = np.copy(reshaped)
 
-    for row in range(pic_dim):
-        flipped_picture[row,:] = reshaped[pic_dim-row-1,:]
+    for col in range(pic_dim):
+        flipped_picture[:,col] = reshaped[:,pic_dim-col-1]
 
     vectorized_flipped_picture = np.reshape(flipped_picture, (1, pic_dim**2))
     return vectorized_flipped_picture
 
+def plot_picture(vectorized_picture):
+    if type(vectorized_picture).__module__ == np.__name__:
+        plt.imshow(vectorized_picture.reshape((64,64), order='F'), cmap='gray')
+    else:
+        plt.imshow(vectorized_picture.to_numpy().reshape((64,64), order='F'), cmap='gray')
+    plt.show()
+    plt.close()
+
 # converts a picture to 16 blocks of size 256. Ordered by coloumn then row
 #test_block = convert_to_blocks(data.iloc[0,:])
+#imgplot = plt.imshow(np.rot90(data.iloc[12,:].to_numpy().reshape(64,64), 3), cmap='gray')
 
-seq = np.zeros((16,1))
-for i in range(seq.shape[0]):
-    seq[i,0] = i
 
-test_flip = flip_picture(data.iloc[0,:])
-print("real first: \n{} \n{} \n {} \n{} \n".format(data.iloc[0,-16:-1],data.iloc[0,-32:-17],data.iloc[0,-48:-33],data.iloc[0,-64:-49]))
-print("flipped: \n{} {} \n {} {} \n".format(test_flip[0,0:15],test_flip[0,16:31],test_flip[0,32:47],test_flip[0,48:63]))
+#plot_picture(data.iloc[0,:])
+#seq = np.zeros((16,1))
+#for i in range(seq.shape[0]):
+#    seq[i,0] = i
+#
+#test_flip = flip_picture(data.iloc[0,:])
+
+run_classification_each_pca_dim(df,4096)
 
 
 '''pd.DataFrame(pca_train_data).to_csv(csv_path+'train_data.csv', header=False, index=False)
