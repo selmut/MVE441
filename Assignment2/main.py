@@ -143,7 +143,7 @@ def run_classification_each_pca_dim(df, n_feats):
 
     # loops through all possible number of features of pca
     for n in n_list:
-        print("feat. {} out of {}...".format(n,n_feats-1))
+        #print("feat. {} out of {}...".format(n,n_feats-1))
 
         # converts the data to categorical data and performs pca 
         pca_feats = reduce_dim(df, n)
@@ -164,9 +164,10 @@ def run_classification_each_pca_dim(df, n_feats):
 
     # plot_scores(avg_scores_gmm, 'GMM')
     # plot_scores(avg_scores_kmeans, 'KMeans')
-    plot_scores(avg_accuracy_knn, 'KNN')
-    plot_scores(avg_accuracy_lda, 'LDA')
-    plot_scores(avg_accuracy_qda, 'QDA')
+    #plot_scores(avg_accuracy_knn, 'KNN')
+    #plot_scores(avg_accuracy_lda, 'LDA')
+    #plot_scores(avg_accuracy_qda, 'QDA')
+    return (avg_accuracy_knn, avg_accuracy_lda, avg_accuracy_qda)
 
 
 def flip_picture(vectorized_picture):
@@ -192,15 +193,86 @@ def plot_picture(vectorized_picture):
 #test_block = convert_to_blocks(data.iloc[0,:])
 #imgplot = plt.imshow(np.rot90(data.iloc[12,:].to_numpy().reshape(64,64), 3), cmap='gray')
 
+def feat_selection_plot():
+    n_feats = 12
+    scores_to_plot = np.zeros((3,n_feats))
+    runs = 100
+    for i in range(runs):
+        print("feat. {} out of {}...".format(i,runs))
+        multiple_scores = run_classification_each_pca_dim(df,n_feats)
+        scores_to_plot[0,:] += multiple_scores[0]/runs
+        scores_to_plot[1,:] += multiple_scores[1]/runs
+        scores_to_plot[2,:] += multiple_scores[2]/runs
 
-#plot_picture(data.iloc[0,:])
-#seq = np.zeros((16,1))
-#for i in range(seq.shape[0]):
-#    seq[i,0] = i
-#
-#test_flip = flip_picture(data.iloc[0,:])
+    plot_scores(scores_to_plot[0,:], 'KNN') # 3 feat.
+    plot_scores(scores_to_plot[1,:], 'LDA') # 3 feat.
+    plot_scores(scores_to_plot[2,:], 'QDA') # 3 feat.
 
-run_classification_each_pca_dim(df,4096)
+
+
+def run_classification(train_data, test_data, train_labels, test_labels):
+    neighbors = 10
+    nRuns = 5000
+    knn = KNN(neighbors)
+    lda = LDA()
+    qda = QDA()
+    avg_knn_scores = np.zeros(4)
+
+    print('Starting KNN...\n')
+    scores_matrix = np.zeros(nRuns)
+
+    for n in range(nRuns):
+        #print(f'KNN run nr. {n}...')
+        knn_model = knn.fit_data(train_data, train_labels)
+        knn_predictions = knn.predict(test_data, test_labels, knn_model)
+        knn_accuracy = accuracy_score(knn_predictions, test_labels)
+
+        scores_matrix[n] = knn_accuracy
+
+    avg_knn_scores = np.sum(scores_matrix, axis=0) / nRuns
+
+    print('Starting LDA...\n')
+    scores_matrix = np.zeros(nRuns)
+
+    for n in range(nRuns):
+        #print(f'LDA run nr. {n}...')
+        lda_model = lda.fit_data(train_data, train_labels)
+        lda_predictions = lda.predict(test_data, test_labels, lda_model)
+        lda_accuracy = accuracy_score(lda_predictions, test_labels)
+
+        scores_matrix[n] = lda_accuracy
+
+    avg_lda_scores = np.sum(scores_matrix, axis=0) / nRuns
+
+    print('Starting QDA...\n')
+    scores_matrix = np.zeros(nRuns)
+
+    for n in range(nRuns):
+        #print(f'QDA run nr. {n}...')
+        qda_model = qda.fit_data(train_data, train_labels)
+        qda_predictions = qda.predict(test_data, test_labels, qda_model)
+        qda_scores = accuracy_score(qda_predictions, test_labels)
+
+        scores_matrix[n] = qda_scores
+
+    avg_qda_scores = np.sum(scores_matrix, axis=0) / nRuns
+
+    # stores the average score of CV
+    print("KNN scores on dataset: ", avg_knn_scores)
+    print("\nLDA scores on dataset: ", avg_lda_scores)
+    print("\nQDA scores on dataset: ", avg_qda_scores)
+
+    return avg_lda_scores, avg_qda_scores, avg_knn_scores
+
+
+
+data_scaled = pd.DataFrame(preprocessing.scale(data),columns = data.columns) 
+pca = PCA(n_components=3)
+pca_feats = pca.fit_transform(data_scaled)
+pca_train_data, pca_test_data, pca_train_labels, pca_test_labels = train_test_split(pd.DataFrame(pca_feats),pd.DataFrame(labels), 
+                                                                                    test_size=0.2, stratify=labels)
+
+run_classification(pca_train_data, pca_test_data, pca_train_labels, pca_test_labels)
 
 
 '''pd.DataFrame(pca_train_data).to_csv(csv_path+'train_data.csv', header=False, index=False)
