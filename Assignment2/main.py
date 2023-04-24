@@ -5,6 +5,7 @@ import math
 from sklearn import preprocessing
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
+import random
 from sklearn.feature_selection import VarianceThreshold, SelectKBest, SequentialFeatureSelector
 from matplotlib import pyplot as plt
 from sklearn.neighbors import KNeighborsClassifier
@@ -140,7 +141,9 @@ def choose_n_pixels(n_components):
         plt.figure()
         plt.plot(current_pca_ax.to_numpy())
         plt.plot(np.linspace(0, 4096, num=4096), np.ones(4096)*max_pixel*0.5, 'k--')
+        plt.xlabel("Pixels in descending order"), plt.ylabel("Dimension variance"), plt.title("Variance of each dimension for " + i)
         plt.savefig(f'img/{i}.png')
+        plt.close()
 
 
 choose_n_pixels(3)
@@ -230,7 +233,7 @@ def feat_selection_plot():
 
 def run_classification(train_data, test_data, train_labels, test_labels):
     neighbors = 10
-    nRuns = 5000
+    nRuns = 10
     knn = KNN(neighbors)
     lda = LDA()
     qda = QDA()
@@ -290,9 +293,43 @@ pca_feats = pca.fit_transform(data_scaled)
 pca_train_data, pca_test_data, pca_train_labels, pca_test_labels = train_test_split(pd.DataFrame(pca_feats),pd.DataFrame(labels), 
                                                                                     test_size=0.2, stratify=labels)
 
-run_classification(pca_train_data, pca_test_data, pca_train_labels, pca_test_labels)
+#run_classification(pca_train_data, pca_test_data, pca_train_labels, pca_test_labels)
 
 
+def find_best_block(all_vectorized_pictures, labels):
+    num_blocks = 16
+    block_accuracy = np.zeros((num_blocks,3))
+    block_train_labels = labels
+    
+    block_test_data = all_vectorized_pictures
+    block_test_labels = labels
+
+    for block in range(num_blocks):
+        block_train_data = np.zeros((all_vectorized_pictures.shape[0], all_vectorized_pictures.shape[1]))
+        for picture in range(all_vectorized_pictures.shape[0]):
+            blocks = convert_to_blocks(all_vectorized_pictures.iloc[picture,:])
+            block_train_data[picture,(block*16*16):((block+1)*16*16)] = blocks[block,:]
+
+        block_accuracy[block,:] = run_classification(block_train_data, block_test_data, block_train_labels, block_test_labels)
+    return block_accuracy
+
+print(find_best_block(data, labels))
+
+
+
+# TODO, perform cathund on this 
+def classify_with_flipped_pictures(all_vectorized_pictures, labels):
+    all_vectorized_pictures_np = all_vectorized_pictures.copy().to_numpy()
+    labels_np = labels.to_numpy()
+    num_pictures = labels.shape[0]
+    flip_index = random.sample(range(num_pictures), int(num_pictures/2))
+    for i in flip_index:
+        all_vectorized_pictures_np[i,:] = flip_picture(all_vectorized_pictures_np[i,:])
+
+
+
+
+classify_with_flipped_pictures(data, labels)
 '''pd.DataFrame(pca_train_data).to_csv(csv_path+'train_data.csv', header=False, index=False)
 pd.DataFrame(pca_train_labels).to_csv(csv_path+'train_labels.csv', header=False, index=False)
 pd.DataFrame(pca_test_data).to_csv(csv_path+'test_data.csv', header=False, index=False)
