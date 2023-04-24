@@ -123,10 +123,27 @@ def plot_scores(scores, classifier):
     plt.savefig(os.path.join(os.path.dirname(__file__), 'img/')+classifier+'_accuracy.png')
     plt.close()
 
-#data_scaled = pd.DataFrame(preprocessing.scale(data),columns = data.columns) 
-#pca = PCA(n_components=5)
-#pca.fit_transform(data_scaled)
-#print(pd.DataFrame(pca.components_,columns=data_scaled.columns,index = ['PC-1','PC-2','PC-3','PC-4','PC-5']))
+
+def choose_n_pixels(n_components):
+    data_scaled = pd.DataFrame(preprocessing.scale(data), columns=data.columns)
+
+    index = [f'PC-{i+1}' for i in range(n_components)]
+
+    pca = PCA(n_components=n_components)
+    pca.fit_transform(data_scaled)
+    reduced_dim_df = pd.DataFrame(pca.components_, columns=data_scaled.columns, index=index)
+
+    for i in index:
+        current_pca_ax = reduced_dim_df.loc[i].abs().sort_values(ascending=False)
+        max_pixel = current_pca_ax.to_numpy()[0]
+
+        plt.figure()
+        plt.plot(current_pca_ax.to_numpy())
+        plt.plot(np.linspace(0, 4096, num=4096), np.ones(4096)*max_pixel*0.5, 'k--')
+        plt.savefig(f'img/{i}.png')
+
+
+choose_n_pixels(3)
 
 def run_classification_each_pca_dim(df, n_feats):
     # constructs all classifiers
@@ -143,15 +160,16 @@ def run_classification_each_pca_dim(df, n_feats):
 
     # loops through all possible number of features of pca
     for n in n_list:
-        #print("feat. {} out of {}...".format(n,n_feats-1))
+        print("feat. {} out of {}...".format(n, n_feats-1))
 
         # converts the data to categorical data and performs pca 
         pca_feats = reduce_dim(df, n)
 
-        # TODO use split data correctly, and get metrics using test_data/labels
         # splits into test and train data
-        pca_train_data, pca_test_data, pca_train_labels, pca_test_labels = train_test_split(pd.DataFrame(pca_feats),pd.DataFrame(labels), 
-                                                                                            test_size=0.2, stratify=labels)
+        pca_train_data, pca_test_data, pca_train_labels, pca_test_labels = train_test_split(pd.DataFrame(pca_feats),
+                                                                                            pd.DataFrame(labels),
+                                                                                            test_size=0.2,
+                                                                                            stratify=labels)
 
         cv_knn = CV(pca_test_data, pca_test_labels, 7, knn)
         cv_lda = CV(pca_test_data, pca_test_labels, 7, lda)
