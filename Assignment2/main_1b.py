@@ -87,6 +87,8 @@ def choose_n_pixels(n_components, data):
     pca.fit_transform(data_scaled)
     reduced_dim_df = pd.DataFrame(pca.components_, columns=data_scaled.columns, index=index)
 
+    out_df = pd.DataFrame(0, columns=data_scaled.columns, index=index)
+
     for i in index:
         current_pca_ax = reduced_dim_df.loc[i].abs().sort_values(ascending=False)
         max_pixel = current_pca_ax.to_numpy()[0]
@@ -97,6 +99,17 @@ def choose_n_pixels(n_components, data):
         plt.xlabel("Pixels in descending order"), plt.ylabel("Dimension variance"), plt.title("Variance of each dimension for " + i)
         plt.savefig(f'img/{i}.png')
         plt.close()
+
+        idxs = np.where(current_pca_ax.to_numpy()>=max_pixel*0.5)
+        important_pixels = current_pca_ax.iloc[idxs]
+        out_df.loc[i][important_pixels.keys()] += 1
+    
+    out = np.sum(out_df.to_numpy(), axis=0)
+
+    plt.figure()
+    plt.imshow(np.reshape(out, (64, 64), order='F'), cmap='gray')
+    plt.savefig('img/cathund.png')
+        
 
 
 choose_n_pixels(3, data)
