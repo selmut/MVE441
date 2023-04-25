@@ -4,6 +4,8 @@ import random
 import pandas as pd
 import numpy as np
 
+from plots import *
+
 path = os.path.dirname(__file__)
 path_cnd_data = os.path.join(os.path.dirname(__file__), 'data/CATSnDOGS.csv')
 path_cnd_label = os.path.join(os.path.dirname(__file__), 'data/Labels.csv')
@@ -36,5 +38,9 @@ def classify_with_flipped_pictures(all_vectorized_pictures, labels):
     flip_index = random.sample(range(num_pictures), int(num_pictures/2))
     for i in flip_index:
         all_vectorized_pictures_np[i,:] = flip_picture(all_vectorized_pictures_np[i,:])
+
+    all_vectorized_pictures_np = pd.DataFrame(all_vectorized_pictures_np)
+
+
 
 classify_with_flipped_pictures(data, labels)

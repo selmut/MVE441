@@ -313,6 +313,7 @@ def find_best_block(all_vectorized_pictures, labels):
         block_accuracy[block,:] = run_classification(block_train_data, block_test_data, block_train_labels, block_test_labels)
     return block_accuracy
 
+
 print(find_best_block(data, labels))
 
 

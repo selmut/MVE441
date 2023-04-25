@@ -1,16 +1,20 @@
 import math
 import os
+import warnings
 import numpy as np
 import pandas as pd
 
 from Classifiers.knn import KNN
 from Classifiers.lda import LDA
 from Classifiers.qda import QDA
+from plots import *
 
 from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import scale
 from sklearn.decomposition import PCA
 from sklearn.model_selection import train_test_split
+
+warnings.filterwarnings("ignore")
 
 
 path = os.path.dirname(__file__)
@@ -49,7 +53,7 @@ def run_classification(train_data, test_data, train_labels, test_labels):
     qda = QDA()
     avg_knn_scores = np.zeros(4)
 
-    print('Starting KNN...\n')
+    # print('Starting KNN...\n')
     scores_matrix = np.zeros(nRuns)
 
     for n in range(nRuns):
@@ -62,7 +66,7 @@ def run_classification(train_data, test_data, train_labels, test_labels):
 
     avg_knn_scores = np.sum(scores_matrix, axis=0) / nRuns
 
-    print('Starting LDA...\n')
+    # print('Starting LDA...\n')
     scores_matrix = np.zeros(nRuns)
 
     for n in range(nRuns):
@@ -75,11 +79,11 @@ def run_classification(train_data, test_data, train_labels, test_labels):
 
     avg_lda_scores = np.sum(scores_matrix, axis=0) / nRuns
 
-    print('Starting QDA...\n')
+    # print('Starting QDA...\n')
     scores_matrix = np.zeros(nRuns)
 
     for n in range(nRuns):
-        #print(f'QDA run nr. {n}...')
+        # print(f'QDA run nr. {n}...')
         qda_model = qda.fit_data(train_data, train_labels)
         qda_predictions = qda.predict(test_data, test_labels, qda_model)
         qda_scores = accuracy_score(qda_predictions, test_labels)
@@ -89,19 +93,18 @@ def run_classification(train_data, test_data, train_labels, test_labels):
     avg_qda_scores = np.sum(scores_matrix, axis=0) / nRuns
 
     # stores the average score of CV
-    print("KNN scores on dataset: ", avg_knn_scores)
-    print("\nLDA scores on dataset: ", avg_lda_scores)
-    print("\nQDA scores on dataset: ", avg_qda_scores)
+    print(f'KNN scores on dataset: {avg_knn_scores}')
+    print(f'LDA scores on dataset: {avg_lda_scores}')
+    print(f'QDA scores on dataset: {avg_qda_scores}\n')
 
     return avg_lda_scores, avg_qda_scores, avg_knn_scores
 
-data_scaled = pd.DataFrame(scale(data),columns = data.columns)
+
+data_scaled = pd.DataFrame(scale(data), columns=data.columns)
 pca = PCA(n_components=3)
 pca_feats = pca.fit_transform(data_scaled)
-pca_train_data, pca_test_data, pca_train_labels, pca_test_labels = train_test_split(pd.DataFrame(pca_feats),pd.DataFrame(labels),
+pca_train_data, pca_test_data, pca_train_labels, pca_test_labels = train_test_split(pd.DataFrame(pca_feats), pd.DataFrame(labels),
                                                                                     test_size=0.2, stratify=labels)
-
-run_classification(pca_train_data, pca_test_data, pca_train_labels, pca_test_labels)
 
 
 def find_best_block(all_vectorized_pictures, labels):
@@ -113,6 +116,7 @@ def find_best_block(all_vectorized_pictures, labels):
     block_test_labels = labels
 
     for block in range(num_blocks):
+        print(f'\nCurrent block: {block+1}')
         block_train_data = np.zeros((all_vectorized_pictures.shape[0], all_vectorized_pictures.shape[1]))
         for picture in range(all_vectorized_pictures.shape[0]):
             blocks = convert_to_blocks(all_vectorized_pictures.iloc[picture, :])
@@ -122,4 +126,8 @@ def find_best_block(all_vectorized_pictures, labels):
                                                       block_test_labels)
     return block_accuracy
 
+
+# KNN; LDA; QDA
+block_acc = find_best_block(data, labels)
+print(np.where(block_acc == np.max(block_acc, axis=0)))
 

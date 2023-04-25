@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -6,10 +7,25 @@ from Classifiers.knn import KNN
 from Classifiers.lda import LDA
 from Classifiers.qda import QDA
 from cross_valid import CV
+from plots import *
 
 from sklearn.preprocessing import StandardScaler, scale
 from sklearn.decomposition import PCA
 from sklearn.model_selection import train_test_split
+
+
+path = os.path.dirname(__file__)
+path_cnd_data = os.path.join(os.path.dirname(__file__), 'data/CATSnDOGS.csv')
+path_cnd_label = os.path.join(os.path.dirname(__file__), 'data/Labels.csv')
+
+# 0 is a cat, 1 is a dog
+labels = pd.read_csv(path_cnd_label)
+labels_np = labels.to_numpy()
+# convert to values in [0,1]?
+data = pd.read_csv(path_cnd_data)
+data_np = data.to_numpy()
+
+df = pd.concat([data, labels], axis=1)
 
 
 # normalizes and centers the data and then performs pca
@@ -54,12 +70,12 @@ def run_classification_each_pca_dim(df, n_feats, labels):
         avg_accuracy_lda[n] = cv_lda.run_cv()
         avg_accuracy_qda[n] = cv_qda.run_cv()
 
-    # plot_scores(avg_scores_gmm, 'GMM')
-    # plot_scores(avg_scores_kmeans, 'KMeans')
-    #plot_scores(avg_accuracy_knn, 'KNN')
-    #plot_scores(avg_accuracy_lda, 'LDA')
-    #plot_scores(avg_accuracy_qda, 'QDA')
-    return (avg_accuracy_knn, avg_accuracy_lda, avg_accuracy_qda)
+    '''plot_scores(avg_scores_gmm, 'GMM')
+    plot_scores(avg_scores_kmeans, 'KMeans')
+    plot_scores(avg_accuracy_knn, 'KNN')
+    plot_scores(avg_accuracy_lda, 'LDA')
+    plot_scores(avg_accuracy_qda, 'QDA')'''
+    return avg_accuracy_knn, avg_accuracy_lda, avg_accuracy_qda
 
 
 def choose_n_pixels(n_components, data):
@@ -83,5 +99,5 @@ def choose_n_pixels(n_components, data):
         plt.close()
 
 
-choose_n_pixels(3)
+choose_n_pixels(3, data)
 
