@@ -57,7 +57,7 @@ def run_classification(train_data, test_data, train_labels, test_labels):
     scores_matrix = np.zeros(nRuns)
 
     for n in range(nRuns):
-        #print(f'KNN run nr. {n}...')
+        # print(f'KNN run nr. {n}...')
         knn_model = knn.fit_data(train_data, train_labels)
         knn_predictions = knn.predict(test_data, test_labels, knn_model)
         knn_accuracy = accuracy_score(knn_predictions, test_labels)

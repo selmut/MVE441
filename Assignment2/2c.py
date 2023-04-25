@@ -17,7 +17,7 @@ labels_np = labels.to_numpy()
 data = pd.read_csv(path_cnd_data)
 data_np = data.to_numpy()
 
-df = pd.concat([data,labels], axis=1)
+df = pd.concat([data, labels], axis=1)
 
 
 def flip_picture(vectorized_picture):
@@ -26,7 +26,7 @@ def flip_picture(vectorized_picture):
     flipped_picture = np.copy(reshaped)
 
     for col in range(pic_dim):
-        flipped_picture[:,col] = reshaped[:,pic_dim-col-1]
+        flipped_picture[:, col] = reshaped[:, pic_dim-col-1]
 
     vectorized_flipped_picture = np.reshape(flipped_picture, (1, pic_dim**2))
     return vectorized_flipped_picture
