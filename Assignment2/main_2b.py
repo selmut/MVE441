@@ -108,24 +108,44 @@ pca_train_data, pca_test_data, pca_train_labels, pca_test_labels = train_test_sp
                                                                                     test_size=0.2, stratify=labels)
 
 
+#def find_best_block(all_vectorized_pictures, labels):
+#    num_blocks = 16
+#    block_accuracy = np.zeros((num_blocks, 3))
+#    block_train_labels = labels
+#
+#    block_test_data = all_vectorized_pictures
+#    block_test_labels = labels
+#
+#    for block in range(num_blocks):
+#        print(f'\nCurrent block: {block+1}')
+#        block_train_data = np.zeros((all_vectorized_pictures.shape[0], all_vectorized_pictures.shape[1]))
+#        for picture in range(all_vectorized_pictures.shape[0]):
+#            blocks = convert_to_blocks(all_vectorized_pictures.iloc[picture, :])
+#            block_train_data[picture, (block * 16 * 16):((block + 1) * 16 * 16)] = blocks[block, :]
+#
+#        block_accuracy[block, :] = run_classification(block_train_data, block_test_data, block_train_labels,
+#                                                      block_test_labels)
+#    return block_accuracy
+
+
+
+
 def find_best_block(all_vectorized_pictures, labels):
     num_blocks = 16
     block_accuracy = np.zeros((num_blocks, 3))
-    block_train_labels = labels
-
-    block_test_data = all_vectorized_pictures
-    block_test_labels = labels
-
+    block_data = np.zeros((all_vectorized_pictures.shape[0], 16*16))
     for block in range(num_blocks):
         print(f'\nCurrent block: {block+1}')
-        block_train_data = np.zeros((all_vectorized_pictures.shape[0], all_vectorized_pictures.shape[1]))
         for picture in range(all_vectorized_pictures.shape[0]):
             blocks = convert_to_blocks(all_vectorized_pictures.iloc[picture, :])
-            block_train_data[picture, (block * 16 * 16):((block + 1) * 16 * 16)] = blocks[block, :]
+            block_data[picture,:] = blocks[block, :]
 
+        block_train_data, block_test_data, block_train_labels, block_test_labels = train_test_split(pd.DataFrame(block_data), pd.DataFrame(labels),
+                                                                                                    test_size=0.2, stratify=labels)
         block_accuracy[block, :] = run_classification(block_train_data, block_test_data, block_train_labels,
                                                       block_test_labels)
     return block_accuracy
+
 
 
 def get_block_importance_matrix(block_accuracy):
@@ -156,17 +176,17 @@ def get_block_importance_matrix(block_accuracy):
             current_block += 1
 
     plt.figure()
-    plt.imshow(knn_out, cmap='gray')
+    plt.imshow(np.rot90(knn_out,-1), cmap='gray', vmin=0, vmax=1)
     plt.show()
     plt.close()
 
     plt.figure()
-    plt.imshow(lda_out, cmap='gray')
+    plt.imshow(np.rot90(lda_out,-1), cmap='gray', vmin=0, vmax=1)
     plt.show()
     plt.close()
 
     plt.figure()
-    plt.imshow(qda_out, cmap='gray')
+    plt.imshow(np.rot90(qda_out,-1), cmap='gray', vmin=0, vmax=1)
     plt.show()
     plt.close()
 
