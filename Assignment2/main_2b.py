@@ -3,6 +3,7 @@ import os
 import warnings
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 from Classifiers.knn import KNN
 from Classifiers.lda import LDA
@@ -36,11 +37,11 @@ def convert_to_blocks(vectorized_picture):
     pic_dim = int(math.sqrt(vectorized_picture.shape[0]))
     squares_dim = int(pic_dim/4)
     reshaped = np.reshape(np.asarray(vectorized_picture), (pic_dim,pic_dim))
-    blocks = np.zeros((16,squares_dim**2))
+    blocks = np.zeros((16, squares_dim**2))
 
     for i in range(4):
         for j in range(4):
-            blocks[4*i+j,:] = np.reshape(reshaped[squares_dim*i:squares_dim*(i+1), squares_dim*j:squares_dim*(j+1)], (1,squares_dim**2))
+            blocks[4*i+j, :] = np.reshape(reshaped[squares_dim*i:squares_dim*(i+1), squares_dim*j:squares_dim*(j+1)], (1,squares_dim**2))
 
     return blocks
 
@@ -70,7 +71,7 @@ def run_classification(train_data, test_data, train_labels, test_labels):
     scores_matrix = np.zeros(nRuns)
 
     for n in range(nRuns):
-        #print(f'LDA run nr. {n}...')
+        # print(f'LDA run nr. {n}...')
         lda_model = lda.fit_data(train_data, train_labels)
         lda_predictions = lda.predict(test_data, test_labels, lda_model)
         lda_accuracy = accuracy_score(lda_predictions, test_labels)
@@ -127,11 +128,57 @@ def find_best_block(all_vectorized_pictures, labels):
     return block_accuracy
 
 
+def get_block_importance_matrix(block_accuracy):
+    n_blocks = 16
+    n_rows = 4
+    n_cols = 4
+
+    knn_acc = block_accuracy[:, 0]
+    lda_acc = block_accuracy[:, 1]
+    qda_acc = block_accuracy[:, 2]
+
+    knn_out = np.ones((64, 64))
+    lda_out = np.ones((64, 64))
+    qda_out = np.ones((64, 64))
+
+    current_block = 0
+    for row in range(n_rows):
+        for col in range(n_cols):
+            knn_tmp = np.ones((n_blocks, n_blocks))*knn_acc[current_block]
+            knn_out[n_blocks*row:n_blocks*(row+1), n_blocks*col:n_blocks*(col+1)] = knn_tmp
+
+            lda_tmp = np.ones((n_blocks, n_blocks))*lda_acc[current_block]
+            lda_out[n_blocks*row:n_blocks*(row+1), n_blocks*col:n_blocks*(col+1)] = lda_tmp
+
+            qda_tmp = np.ones((n_blocks, n_blocks))*qda_acc[current_block]
+            qda_out[n_blocks*row:n_blocks*(row+1), n_blocks*col:n_blocks*(col+1)] = qda_tmp
+
+            current_block += 1
+
+    plt.figure()
+    plt.imshow(knn_out, cmap='gray')
+    plt.show()
+    plt.close()
+
+    plt.figure()
+    plt.imshow(lda_out, cmap='gray')
+    plt.show()
+    plt.close()
+
+    plt.figure()
+    plt.imshow(qda_out, cmap='gray')
+    plt.show()
+    plt.close()
+
+
+
 # KNN; LDA; QDA
-block_acc = find_best_block(data, labels)
-print(block_acc)
+# block_acc = find_best_block(data, labels)
+# get_block_importance_matrix(block_acc)
+
+'''print(block_acc)
 print(np.max(block_acc, axis=0))
 print(np.where(block_acc == np.max(block_acc, axis=0)))
 
-max_rows, max_cols = np.where(block_acc == np.max(block_acc, axis=0))
+max_rows, max_cols = np.where(block_acc == np.max(block_acc, axis=0))'''
 

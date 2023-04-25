@@ -22,7 +22,7 @@ df = pd.concat([data, labels], axis=1)
 
 def flip_picture(vectorized_picture):
     pic_dim = int(math.sqrt(vectorized_picture.shape[0]))
-    reshaped = np.reshape(np.asarray(vectorized_picture), (pic_dim,pic_dim))
+    reshaped = np.reshape(np.asarray(vectorized_picture), (pic_dim, pic_dim))
     flipped_picture = np.copy(reshaped)
 
     for col in range(pic_dim):
@@ -38,7 +38,7 @@ def classify_with_flipped_pictures(all_vectorized_pictures, labels):
     num_pictures = labels.shape[0]
     flip_index = random.sample(range(num_pictures), int(num_pictures/2))
     for i in flip_index:
-        all_vectorized_pictures_np[i,:] = flip_picture(all_vectorized_pictures_np[i,:])
+        all_vectorized_pictures_np[i, :] = flip_picture(all_vectorized_pictures_np[i, :])
 
     all_vectorized_pictures_np = pd.DataFrame(all_vectorized_pictures_np)
 

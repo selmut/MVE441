@@ -11,7 +11,7 @@ from plots import *
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 
-warnings.filterwarnings("ignore")
+warnings.filterwarnings('ignore')
 
 # paths for folder, and for the data to use
 path = os.path.dirname(__file__)
@@ -75,9 +75,9 @@ def count_picture_mislabel_frequency(nRuns):
             if qda_predictions[i] != test_labels_np[i]:
                 num_picture_misclassified[2, test_labels.index[i]] += 1
 
-    '''print("KNN {} missclassifications of out {} possible\n".format(int(num_false[0,0]), test_data.shape[0]))
-    print("LDA {} missclassifications of out {} possible\n".format(int(num_false[0,1]), test_data.shape[0]))
-    print("QDA {} missclassifications of out {} possible\n".format(int(num_false[0,2]), test_data.shape[0]))'''
+    '''print("KNN {} misclassifications of out {} possible\n".format(int(num_false[0,0]), test_data.shape[0]))
+    print("LDA {} misclassifications of out {} possible\n".format(int(num_false[0,1]), test_data.shape[0]))
+    print("QDA {} misclassifications of out {} possible\n".format(int(num_false[0,2]), test_data.shape[0]))'''
 
     return num_picture_misclassified, avg_accuracy
 
