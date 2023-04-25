@@ -170,11 +170,12 @@ def get_block_importance_matrix(block_accuracy):
     plt.show()
     plt.close()
 
+    return knn_out, lda_out, qda_out
 
 
 # KNN; LDA; QDA
-# block_acc = find_best_block(data, labels)
-# get_block_importance_matrix(block_acc)
+block_acc = find_best_block(data, labels)
+knn_mat, lda_mat, qda_mat = get_block_importance_matrix(block_acc)
 
 '''print(block_acc)
 print(np.max(block_acc, axis=0))
