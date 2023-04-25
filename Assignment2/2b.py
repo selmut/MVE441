@@ -129,5 +129,9 @@ def find_best_block(all_vectorized_pictures, labels):
 
 # KNN; LDA; QDA
 block_acc = find_best_block(data, labels)
+print(block_acc)
+print(np.max(block_acc, axis=0))
 print(np.where(block_acc == np.max(block_acc, axis=0)))
+
+max_rows, max_cols = np.where(block_acc == np.max(block_acc, axis=0))
 

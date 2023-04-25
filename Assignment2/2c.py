@@ -19,6 +19,7 @@ data_np = data.to_numpy()
 
 df = pd.concat([data,labels], axis=1)
 
+
 def flip_picture(vectorized_picture):
     pic_dim = int(math.sqrt(vectorized_picture.shape[0]))
     reshaped = np.reshape(np.asarray(vectorized_picture), (pic_dim,pic_dim))
@@ -40,7 +41,6 @@ def classify_with_flipped_pictures(all_vectorized_pictures, labels):
         all_vectorized_pictures_np[i,:] = flip_picture(all_vectorized_pictures_np[i,:])
 
     all_vectorized_pictures_np = pd.DataFrame(all_vectorized_pictures_np)
-
 
 
 classify_with_flipped_pictures(data, labels)
