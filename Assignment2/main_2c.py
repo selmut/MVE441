@@ -8,6 +8,9 @@ import numpy as np
 from plots import *
 from mislabeling_counter import MislabelingCounter
 
+from sklearn.preprocessing import StandardScaler, scale
+from sklearn.decomposition import PCA
+
 warnings.filterwarnings('ignore')
 
 path = os.path.dirname(__file__)
@@ -23,6 +26,39 @@ data_np = data.to_numpy()
 
 df = pd.concat([data, labels], axis=1)
 nRuns = 5000
+
+def choose_n_pixels(n_components, data):
+    data_scaled = pd.DataFrame(scale(data), columns=data.columns)
+
+    index = [f'PC-{i+1}' for i in range(n_components)]
+
+    pca = PCA(n_components=n_components)
+    pca.fit_transform(data_scaled)
+    reduced_dim_df = pd.DataFrame(pca.components_, columns=data_scaled.columns, index=index)
+
+    out_df = pd.DataFrame(0, columns=data_scaled.columns, index=index)
+
+    for i in index:
+        current_pca_ax = reduced_dim_df.loc[i].abs().sort_values(ascending=False)
+        max_pixel = current_pca_ax.to_numpy()[0]
+
+        plt.figure()
+        plt.plot(current_pca_ax.to_numpy())
+        plt.plot(np.linspace(0, 4096, num=4096), np.ones(4096)*max_pixel*0.5, 'k--')
+        plt.xlabel("Pixels in descending order"), plt.ylabel("Dimension variance"), plt.title("Variance of each dimension for " + i)
+        plt.savefig(f'img/{i}_flipped.png')
+        plt.close()
+
+        idxs = np.where(current_pca_ax.to_numpy()>=max_pixel*0.5)
+        important_pixels = current_pca_ax.iloc[idxs]
+        out_df.loc[i][important_pixels.keys()] += 1
+    
+    out = np.sum(out_df.to_numpy(), axis=0)
+
+    plt.figure()
+    plt.imshow(np.reshape(out, (64, 64), order='F'), cmap='gray')
+    plt.savefig('img/important_pixels_flipped_picture.png')
+
 
 def flip_picture(vectorized_picture):
     pic_dim = int(math.sqrt(vectorized_picture.shape[0]))
@@ -45,11 +81,13 @@ def classify_with_flipped_pictures(all_vectorized_pictures, labels):
         all_vectorized_pictures_np[i, :] = flip_picture(all_vectorized_pictures_np[i, :])
 
     all_vectorized_pictures_np = pd.DataFrame(all_vectorized_pictures_np)
+    choose_n_pixels(3, all_vectorized_pictures_np)
 
     mc = MislabelingCounter(all_vectorized_pictures_np, labels, nRuns)
     return mc.count_picture_mislabel_frequency()
 
 
+num_picture_misclassified, avg_accuracy = classify_with_flipped_pictures(data, labels)
 '''num_picture_misclassified, avg_accuracy = classify_with_flipped_pictures(data, labels)
 
 percent_picture_misclassified_knn = num_picture_misclassified[0]/nRuns
