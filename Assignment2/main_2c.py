@@ -50,7 +50,7 @@ def classify_with_flipped_pictures(all_vectorized_pictures, labels):
     return mc.count_picture_mislabel_frequency()
 
 
-'''num_picture_misclassified, avg_accuracy = classify_with_flipped_pictures(data, labels)
+num_picture_misclassified, avg_accuracy = classify_with_flipped_pictures(data, labels)
 
 percent_picture_misclassified_knn = num_picture_misclassified[0]/nRuns
 percent_picture_misclassified_lda = num_picture_misclassified[1]/nRuns
@@ -62,7 +62,20 @@ qda_idxs = np.where(percent_picture_misclassified_qda >= 0.05)[0]
 
 idxs = np.intersect1d(np.intersect1d(knn_idxs, lda_idxs), np.intersect1d(lda_idxs, qda_idxs))
 
+print(f'Avg. accuracies: {avg_accuracy}')
+
+print('\nJoint indexes:')
+print(knn_idxs)
+print(lda_idxs)
+print(qda_idxs)
+print('Values for non-joint indexes:')
+print(f'KNN: {num_picture_misclassified[0, knn_idxs]}')
+print(f'LDA: {num_picture_misclassified[1, lda_idxs]}')
+print(f'QDA: {num_picture_misclassified[2, qda_idxs]}')
+
+print('\nJoint indexes:')
 print(idxs)
+print('\nValues for joint indexes:')
 print(f'KNN: {num_picture_misclassified[0, idxs]}')
 print(f'LDA: {num_picture_misclassified[1, idxs]}')
 print(f'QDA: {num_picture_misclassified[2, idxs]}')
@@ -74,12 +87,13 @@ for i in idxs:
         plt.imshow(vectorized_picture.reshape((64, 64), order='F'), cmap='gray')
     else:
         plt.imshow(vectorized_picture.to_numpy().reshape((64, 64), order='F'), cmap='gray')
-    plt.savefig(f'img/2c/{i}.png')'''
+    plt.savefig(f'img/2c/{i}.png')
+
 
 # computed from 5000 realisations
-knn_idxs = np.array([488, 438, 497, 508, 514, 410, 475, 492, 510, 507, 515, 469, 397, 523, 524, 484, 408, 377, 416, 496, 499])
+'''knn_idxs = np.array([488, 438, 497, 508, 514, 410, 475, 492, 510, 507, 515, 469, 397, 523, 524, 484, 408, 377, 416, 496, 499])
 lda_idxs = np.array([484, 493, 495, 474, 517, 376, 394, 473, 424, 475, 513, 487, 524, 497, 524, 439, 475, 468, 393, 496, 383])
 qda_idxs = np.array([260, 277, 270, 265, 316, 256, 253, 268, 316, 286, 282, 278, 277, 292, 272, 257, 258, 257, 287, 274, 274])
-idxs_intersect = [8, 12, 20, 30, 37, 39, 41, 47, 71, 85, 88, 89, 98, 102, 103, 117, 120, 143, 169, 177, 178]
 
+idxs_intersect = [8, 12, 20, 30, 37, 39, 41, 47, 71, 85, 88, 89, 98, 102, 103, 117, 120, 143, 169, 177, 178]'''
 
