@@ -93,11 +93,6 @@ def run_classification(train_data, test_data, train_labels, test_labels):
 
     avg_qda_scores = np.sum(scores_matrix, axis=0) / nRuns
 
-    # stores the average score of CV
-    print(f'KNN scores on dataset: {avg_knn_scores}')
-    print(f'LDA scores on dataset: {avg_lda_scores}')
-    print(f'QDA scores on dataset: {avg_qda_scores}\n')
-
     return avg_lda_scores, avg_qda_scores, avg_knn_scores
 
 
@@ -135,7 +130,7 @@ def find_best_block(all_vectorized_pictures, labels):
     block_accuracy = np.zeros((num_blocks, 3))
     block_data = np.zeros((all_vectorized_pictures.shape[0], 16*16))
     for block in range(num_blocks):
-        print(f'\nCurrent block: {block+1}')
+        print(f'Current block: {block+1}')
         for picture in range(all_vectorized_pictures.shape[0]):
             blocks = convert_to_blocks(all_vectorized_pictures.iloc[picture, :])
             block_data[picture,:] = blocks[block, :]
@@ -176,25 +171,32 @@ def get_block_importance_matrix(block_accuracy):
             current_block += 1
 
     plt.figure()
-    plt.imshow(np.rot90(knn_out,-1), cmap='gray', vmin=0, vmax=1)
+    plt.imshow(np.rot90(knn_out,-1), cmap='gray')
+    plt.savefig('img/knn_best_blocks.png')
     plt.show()
     plt.close()
 
     plt.figure()
-    plt.imshow(np.rot90(lda_out,-1), cmap='gray', vmin=0, vmax=1)
+    plt.imshow(np.rot90(lda_out,-1), cmap='gray')
+    plt.savefig('img/lda_best_blocks.png')
     plt.show()
     plt.close()
 
     plt.figure()
-    plt.imshow(np.rot90(qda_out,-1), cmap='gray', vmin=0, vmax=1)
+    plt.imshow(np.rot90(qda_out,-1), cmap='gray')
+    plt.savefig('img/qda_best_blocks.png')
     plt.show()
     plt.close()
 
     return knn_out, lda_out, qda_out
 
+nRuns = 15
+block_acc = np.zeros((16,3))
+for i in range(nRuns):
+    print(f'\nRun {i+1} out of {nRuns}...')
+    block_acc += find_best_block(data, labels)
 
-# KNN; LDA; QDA
-block_acc = find_best_block(data, labels)
+print(block_acc)
 knn_mat, lda_mat, qda_mat = get_block_importance_matrix(block_acc)
 
 '''print(block_acc)
