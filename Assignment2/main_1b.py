@@ -111,6 +111,6 @@ def choose_n_pixels(n_components, data):
     plt.savefig('img/important_pixels_pca.png')
         
 
-
-choose_n_pixels(3, data)
+if __name__ == "__main__":
+    choose_n_pixels(3, data)
 
