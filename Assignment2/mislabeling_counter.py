@@ -25,7 +25,8 @@ class MislabelingCounter:
         avg_accuracy = np.zeros((1, 3))
 
         for n in range(self.nRuns):
-            print("Run {} out of {}...".format(n, self.nRuns))
+            if n % 100 == 0:
+                print("Run {} out of {}...".format(n, self.nRuns))
             # split data
             train_data, test_data, train_labels, test_labels = train_test_split(self.data, self.labels, test_size=0.1,
                                                                                 shuffle=True)
