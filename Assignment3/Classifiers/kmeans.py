@@ -13,8 +13,8 @@ class kMeans:
     #    kmeans_classification = KMeans(n_clusters=self.num_clusters).fit_predict(self.pca_data)
     #    return kmeans_classification
 
-    def fit_data(self, train_data, train_labels):
+    def fit_data(self, train_data):
         return KMeans(n_clusters=self.num_clusters).fit(train_data)
 
-    def predict(self, test_data, test_labels, model):
+    def predict(self, test_data, model):
         return model.predict(test_data)
