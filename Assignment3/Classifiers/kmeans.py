@@ -1,6 +1,4 @@
-import pandas as pd
 from sklearn.cluster import KMeans
-
 
 class kMeans:
     def __init__(self, num_clusters):
@@ -18,3 +16,6 @@ class kMeans:
 
     def predict(self, test_data, model):
         return model.predict(test_data)
+    
+    def fit_predict(self, data):
+        return KMeans(n_clusters=self.num_clusters).fit_predict(data)
