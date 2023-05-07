@@ -1,7 +1,12 @@
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt; plt.rcParams['figure.dpi'] = 200
 from Classifiers.kmeans import kMeans
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+
 from loocv import LOOCV
+import plots
 import warnings
 
 warnings.filterwarnings("ignore")
@@ -13,16 +18,31 @@ new_keys = {'lab': 'label'}
 new_keys.update(dict(zip([f'Unnamed: {i}' for i in range(3000)], [f'Gene {i}' for i in range(3000)])))
 
 df = df.rename(columns=new_keys)
+print(df.head())
 
 data = df.loc[:, 'Gene 1':'Gene 2999']
 labels = df.loc[:, 'label']
 
-scores = np.zeros(nruns, 3)
+
+def reduce_dim(df, n):
+    std_data = StandardScaler().fit_transform(df)
+    pca = PCA(n_components=n, svd_solver='full')
+    return pca.fit_transform(std_data)
+
+
+pca_data = reduce_dim(data, 2)
+plots.plot_pca(pca_data, labels)
+
+pca_data = reduce_dim(data, 3)
+plots.plot_pca_3D(pca_data, labels)
+
+
+'''scores = np.zeros(nruns, 3)
 
 for i in range(nruns):
-#for i in range(df.shape[0]):
+# for i in range(df.shape[0]):
     kmeans = kMeans(i)
     loocv_kmeans = LOOCV(df, kmeans)
-    scores[i,:] = loocv_kmeans.run()
+    scores[i,:] = loocv_kmeans.run()'''
 
 # plot later
