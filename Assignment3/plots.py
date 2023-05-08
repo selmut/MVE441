@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt; plt.rcParams['figure.dpi'] = 200
 import numpy as np
+import seaborn as sns
 
 
 def plot_pca(pca_data, labels):
@@ -30,3 +31,25 @@ def plot_pca_3D(pca_data, labels):
     ax.set_ylabel('PC2')
     ax.set_zlabel('PC3')
     plt.savefig('img/pca_3D_kmeans.png')
+
+
+def plot_dim_vs_clusters(scores, n_axes, n_clusters, filename):
+    plt.figure()
+    sns.heatmap(scores, cmap='flare_r', yticklabels=n_axes, xticklabels=n_clusters, vmin=0, vmax=1)
+    plt.xlabel('Clusters')
+    plt.ylabel('PCA-dim')
+    plt.savefig(f'img/heatmaps/'+filename)
+    plt.close()
+
+
+def plot_scores_vs_clusters(scores, n_clusters, filename, score_type):
+    plt.figure()
+    plt.plot(n_clusters, scores[0, :], c='tab:pink')
+    plt.plot(n_clusters, scores[1, :], c='tab:olive')
+    plt.plot(n_clusters, scores[2, :], c='tab:cyan')
+    plt.legend(['kMeans', 'GMM', 'Agglomerative'])
+    plt.xlabel('Number of clusters')
+    plt.ylabel(score_type)
+    plt.savefig(f'img/scores/'+filename)
+    plt.close()
+
