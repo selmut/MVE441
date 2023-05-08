@@ -30,11 +30,7 @@ def reduce_dim(df, n):
     return pca.fit_transform(std_data)
 
 
-n_axes = np.arange(1, 20)  # len(data))
-n_clusters = np.arange(2, 20)  # len(data))
-
-
-def score_heatmap(data, true_labels):
+def score_heatmap(data, true_labels, n_axes, n_clusters):
     scores_silhouette = np.zeros((3, len(n_axes), len(n_clusters)))
     scores_nmi = np.zeros((3, len(n_axes), len(n_clusters)))
     scores_fm = np.zeros((3, len(n_axes), len(n_clusters)))
@@ -83,7 +79,10 @@ def score_heatmap(data, true_labels):
     return scores_silhouette, scores_nmi, scores_fm
 
 
-n_real = 10
+n_real = 1
+
+n_axes = np.arange(1, len(data))
+n_clusters = np.arange(2, len(data))
 
 scores_silhouette = np.zeros((3, len(n_axes), len(n_clusters)))
 scores_nmi = np.zeros((3, len(n_axes), len(n_clusters)))
@@ -91,7 +90,7 @@ scores_fm = np.zeros((3, len(n_axes), len(n_clusters)))
 
 for n in range(n_real):
     print(f'\nRealisation nr. {n+1}/{n_real}')
-    tmp_scores_silhouette, tmp_scores_nmi, tmp_scores_fm = score_heatmap(data, labels)
+    tmp_scores_silhouette, tmp_scores_nmi, tmp_scores_fm = score_heatmap(data, labels, n_axes, n_clusters)
     scores_silhouette = (scores_silhouette + tmp_scores_silhouette)/2
     scores_nmi = (scores_nmi+tmp_scores_nmi)/2
     scores_fm = (scores_fm+tmp_scores_fm)/2
@@ -115,8 +114,9 @@ chosen_dim_silhouette = np.zeros((3, len(n_clusters)))
 chosen_dim_nmi = np.zeros((3, len(n_clusters)))
 chosen_dim_fm = np.zeros((3, len(n_clusters)))
 
+pca_dim = 5
 for i, c in enumerate(n_clusters):
-    pca_data = reduce_dim(data, 5)
+    pca_data = reduce_dim(data, pca_dim)
 
     # kMeans
     predicted_labels_kmeans = KMeans(c).fit_predict(pca_data)
@@ -154,6 +154,6 @@ for i, c in enumerate(n_clusters):
     fm_agglo = fowlkes_mallows_score(labels, predicted_labels_agglo)
     chosen_dim_fm[2, i] = fm_agglo
 
-plots.plot_scores_vs_clusters(chosen_dim_silhouette, n_clusters, 'pca5_silhouette.png', 'Silhouette score')
-plots.plot_scores_vs_clusters(chosen_dim_nmi, n_clusters, 'pca5_nmi.png', 'NMI')
-plots.plot_scores_vs_clusters(chosen_dim_fm, n_clusters, 'pca5_fm.png', 'Fowlkes-Mallows score')
+plots.plot_scores_vs_clusters(chosen_dim_silhouette, n_clusters, f'pca{pca_dim}_silhouette.png', 'Silhouette score')
+plots.plot_scores_vs_clusters(chosen_dim_nmi, n_clusters, f'pca{pca_dim}_nmi.png', 'NMI')
+plots.plot_scores_vs_clusters(chosen_dim_fm, n_clusters, f'pca{pca_dim}_fm.png', 'Fowlkes-Mallows score')
