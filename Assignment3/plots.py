@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt; plt.rcParams['figure.dpi'] = 200
 import numpy as np
+import seaborn as sns
 
 
 def plot_pca(pca_data, labels):
@@ -54,3 +55,33 @@ def plot_scores_feature_selection(score, n_cluster, metric):
     plt.grid(True)
     plt.savefig('img/'+metric+'_vs_clusters_feat_selection.png')
     plt.close()
+    
+def plot_dim_vs_clusters(scores, n_axes, n_clusters, filename):
+    plt.figure()
+    sns.heatmap(scores, cmap='flare_r', yticklabels=n_axes, xticklabels=n_clusters, vmin=0, vmax=1)
+    plt.xlabel('Clusters')
+    plt.ylabel('PCA-dim')
+    '''plt.xticks([])
+    plt.yticks([])'''
+    plt.savefig(f'img/heatmaps/'+filename)
+    plt.close()
+
+
+def plot_scores_vs_clusters(scores, n_clusters, filename, score_type):
+    plt.figure()
+    plt.plot(n_clusters, scores[0, :], c='tab:pink')
+    plt.plot(n_clusters, scores[1, :], c='tab:olive')
+    plt.plot(n_clusters, scores[2, :], c='tab:cyan')
+    plt.legend(['kMeans', 'GMM', 'Agglomerative'])
+    plt.xlabel('Number of clusters')
+    plt.ylabel(score_type)
+    plt.savefig(f'img/scores/'+filename)
+    plt.close()
+
+
+def plot_scores_hist(chosen_dim_scores, classifier, n_clusters, filename):
+    plt.figure()
+    plt.hist(chosen_dim_scores[:, classifier, n_clusters-1], bins=15)
+    plt.savefig('img/histograms/'+filename)
+    plt.close()
+
