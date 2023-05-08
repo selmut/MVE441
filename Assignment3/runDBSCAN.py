@@ -1,10 +1,10 @@
 import numpy as np
 import pandas as pd
-from Classifiers.kmeans import kMeans
-from Classifiers.DBSCAN import DensityBasedClustering
+from Clustering.DBSCAN import DensityBasedClustering
 from sklearn.metrics import silhouette_score
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import silhouette_score, normalized_mutual_info_score, fowlkes_mallows_score
 from loocv import LOOCV
 import warnings
 import matplotlib.pyplot as plt
@@ -55,8 +55,16 @@ for i in range(82):
 plt.plot(np.arange(82),np.sort(d))
 plt.show()
 
-dbscan=DensityBasedClustering(12,n_min)
+dbscan=DensityBasedClustering(12.5,n_min)
 result=dbscan.fit_data(pca_data)
 
-print(result)
+nmi=normalized_mutual_info_score(labels,result)
+silhouette=silhouette_score(pca_data,result)
+fm=fowlkes_mallows_score(labels, result)
+
+print("unclassified:",np.sum(result==-1))
+
 accuracy(result,labels)
+print("nmi score:",nmi)
+print("silhouette score:",silhouette)
+print("fowlkes malloes score:",fm)
