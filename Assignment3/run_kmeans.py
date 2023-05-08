@@ -9,7 +9,6 @@ from sklearn.cluster import AgglomerativeClustering
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import silhouette_score, normalized_mutual_info_score, fowlkes_mallows_score
-from loocv import LOOCV
 import plots
 import warnings
 
@@ -88,7 +87,7 @@ scores_silhouette = np.zeros((3, len(n_axes), len(n_clusters)))
 scores_nmi = np.zeros((3, len(n_axes), len(n_clusters)))
 scores_fm = np.zeros((3, len(n_axes), len(n_clusters)))
 
-'''for n in range(n_real):
+for n in range(n_real):
     print(f'\nRealisation nr. {n+1}/{n_real}')
     tmp_scores_silhouette, tmp_scores_nmi, tmp_scores_fm = score_heatmap(data, labels, n_axes, n_clusters)
     scores_silhouette = (scores_silhouette + tmp_scores_silhouette)/2
@@ -106,7 +105,7 @@ plots.plot_dim_vs_clusters(scores_nmi[0, :, :], n_axes, n_clusters, 'nmi_heatmap
 
 plots.plot_dim_vs_clusters(scores_fm[1, :, :], n_axes, n_clusters, 'fm_heatmap_gmm.png')
 plots.plot_dim_vs_clusters(scores_fm[2, :, :], n_axes, n_clusters, 'fm_heatmap_agglo.png')
-plots.plot_dim_vs_clusters(scores_fm[0, :, :], n_axes, n_clusters, 'fm_heatmap_kmeans.png')'''
+plots.plot_dim_vs_clusters(scores_fm[0, :, :], n_axes, n_clusters, 'fm_heatmap_kmeans.png')
 
 
 def score_for_chosen_pca_dim(n_clusters, data, pca_dim, true_labels):
