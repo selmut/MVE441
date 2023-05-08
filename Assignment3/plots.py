@@ -30,3 +30,27 @@ def plot_pca_3D(pca_data, labels):
     ax.set_ylabel('PC2')
     ax.set_zlabel('PC3')
     plt.savefig('img/pca_3D_kmeans.png')
+
+
+def plot_scores(score, n_cluster, metric):
+    plt.figure()
+    plt.plot(n_cluster, score[0,:])
+    plt.plot(n_cluster, score[1,:])
+    plt.plot(n_cluster, score[2,:])
+    plt.legend(['kMeans', 'GMM', 'Agglomerative'], loc='upper right')
+    plt.xlabel('Number of clusters'), plt.ylabel(metric), plt.title(metric+' score vs. number of clusters')
+    plt.grid(True)
+    plt.savefig('img/'+metric+'_vs_clusters.png')
+    plt.close()
+
+
+def plot_scores_feature_selection(score, n_cluster, metric):
+    plt.figure()
+    plt.plot(n_cluster, score[0,:])
+    plt.plot(n_cluster, score[1,:])
+    plt.plot(n_cluster, score[2,:])
+    plt.legend(['kMeans', 'GMM', 'Agglomerative'], loc='upper right')
+    plt.xlabel('Number of clusters'), plt.ylabel(metric), plt.title(metric+' score vs. number of clusters for feature selection')
+    plt.grid(True)
+    plt.savefig('img/'+metric+'_vs_clusters_feat_selection.png')
+    plt.close()
