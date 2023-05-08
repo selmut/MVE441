@@ -12,7 +12,7 @@ def plot_pca(pca_data, labels):
     ax.legend()
     plt.xlabel('PC1')
     plt.ylabel('PC2')
-    plt.savefig('img/pca_2D.png')
+    plt.savefig('img/pca_2D_kmeans.png')
 
 
 def plot_pca_3D(pca_data, labels):
@@ -29,4 +29,4 @@ def plot_pca_3D(pca_data, labels):
     ax.set_xlabel('PC1')
     ax.set_ylabel('PC2')
     ax.set_zlabel('PC3')
-    plt.savefig('img/pca_3D.png')
+    plt.savefig('img/pca_3D_kmeans.png')

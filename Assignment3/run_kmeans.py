@@ -1,9 +1,10 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt; plt.rcParams['figure.dpi'] = 200
-from Classifiers.kmeans import kMeans
+from Clustering.kmeans import kMeans
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import silhouette_score
 
 from loocv import LOOCV
 import plots
@@ -34,15 +35,13 @@ pca_data = reduce_dim(data, 2)
 plots.plot_pca(pca_data, labels)
 
 pca_data = reduce_dim(data, 3)
-plots.plot_pca_3D(pca_data, labels)
+# plots.plot_pca_3D(pca_data, labels)
+
+labels = kMeans(3).fit_predict(pca_data)
+
+score = silhouette_score(pca_data, labels)
+
+# plots.plot_pca_3D(pca_data, labels)
 
 
-'''scores = np.zeros(nruns, 3)
 
-for i in range(nruns):
-# for i in range(df.shape[0]):
-    kmeans = kMeans(i)
-    loocv_kmeans = LOOCV(df, kmeans)
-    scores[i,:] = loocv_kmeans.run()'''
-
-# plot later
