@@ -38,8 +38,8 @@ def plot_dim_vs_clusters(scores, n_axes, n_clusters, filename):
     sns.heatmap(scores, cmap='flare_r', yticklabels=n_axes, xticklabels=n_clusters, vmin=0, vmax=1)
     plt.xlabel('Clusters')
     plt.ylabel('PCA-dim')
-    plt.xticks([])
-    plt.yticks([])
+    '''plt.xticks([])
+    plt.yticks([])'''
     plt.savefig(f'img/heatmaps/'+filename)
     plt.close()
 
@@ -53,5 +53,12 @@ def plot_scores_vs_clusters(scores, n_clusters, filename, score_type):
     plt.xlabel('Number of clusters')
     plt.ylabel(score_type)
     plt.savefig(f'img/scores/'+filename)
+    plt.close()
+
+
+def plot_scores_hist(chosen_dim_scores, classifier, n_clusters, filename):
+    plt.figure()
+    plt.hist(chosen_dim_scores[:, classifier, n_clusters-1], bins=15)
+    plt.savefig('img/histograms/'+filename)
     plt.close()
 

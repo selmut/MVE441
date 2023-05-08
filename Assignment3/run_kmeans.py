@@ -81,14 +81,14 @@ def score_heatmap(data, true_labels, n_axes, n_clusters):
 
 n_real = 1
 
-n_axes = np.arange(1, len(data))
-n_clusters = np.arange(2, len(data))
+n_axes = np.arange(1, 20)  # len(data))
+n_clusters = np.arange(2, 20)  # len(data))
 
 scores_silhouette = np.zeros((3, len(n_axes), len(n_clusters)))
 scores_nmi = np.zeros((3, len(n_axes), len(n_clusters)))
 scores_fm = np.zeros((3, len(n_axes), len(n_clusters)))
 
-for n in range(n_real):
+'''for n in range(n_real):
     print(f'\nRealisation nr. {n+1}/{n_real}')
     tmp_scores_silhouette, tmp_scores_nmi, tmp_scores_fm = score_heatmap(data, labels, n_axes, n_clusters)
     scores_silhouette = (scores_silhouette + tmp_scores_silhouette)/2
@@ -106,54 +106,118 @@ plots.plot_dim_vs_clusters(scores_nmi[0, :, :], n_axes, n_clusters, 'nmi_heatmap
 
 plots.plot_dim_vs_clusters(scores_fm[1, :, :], n_axes, n_clusters, 'fm_heatmap_gmm.png')
 plots.plot_dim_vs_clusters(scores_fm[2, :, :], n_axes, n_clusters, 'fm_heatmap_agglo.png')
-plots.plot_dim_vs_clusters(scores_fm[0, :, :], n_axes, n_clusters, 'fm_heatmap_kmeans.png')
+plots.plot_dim_vs_clusters(scores_fm[0, :, :], n_axes, n_clusters, 'fm_heatmap_kmeans.png')'''
 
 
-n_clusters = np.arange(2, 82)
+def score_for_chosen_pca_dim(n_clusters, data, pca_dim, true_labels):
+    chosen_dim_silhouette = np.zeros((3, len(n_clusters)))
+    chosen_dim_nmi = np.zeros((3, len(n_clusters)))
+    chosen_dim_fm = np.zeros((3, len(n_clusters)))
+
+    for i, c in enumerate(n_clusters):
+        pca_data = reduce_dim(data, pca_dim)
+
+        # kMeans
+        predicted_labels_kmeans = KMeans(c).fit_predict(pca_data)
+
+        nmi_kmeans = normalized_mutual_info_score(true_labels, predicted_labels_kmeans)
+        chosen_dim_nmi[0, i] = nmi_kmeans
+
+        silhouette_kmeans = silhouette_score(pca_data, predicted_labels_kmeans)
+        chosen_dim_silhouette[0, i] = silhouette_kmeans
+
+        fm_kmeans = fowlkes_mallows_score(true_labels, predicted_labels_kmeans)
+        chosen_dim_fm[0, i] = fm_kmeans
+
+        # GMM
+        predicted_labels_gmm = GaussianMixture(c).fit_predict(pca_data)
+
+        nmi_gmm = normalized_mutual_info_score(true_labels, predicted_labels_gmm)
+        chosen_dim_nmi[1, i] = nmi_gmm
+
+        silhouette_gmm = silhouette_score(pca_data, predicted_labels_gmm)
+        chosen_dim_silhouette[1, i] = silhouette_gmm
+
+        fm_gmm = fowlkes_mallows_score(true_labels, predicted_labels_gmm)
+        chosen_dim_fm[1, i] = fm_gmm
+
+        # Agglomerative
+        predicted_labels_agglo = AgglomerativeClustering(c).fit_predict(pca_data)
+
+        nmi_agglo = normalized_mutual_info_score(true_labels, predicted_labels_agglo)
+        chosen_dim_nmi[2, i] = nmi_agglo
+
+        silhouette_agglo = silhouette_score(pca_data, predicted_labels_agglo)
+        chosen_dim_silhouette[2, i] = silhouette_agglo
+
+        fm_agglo = fowlkes_mallows_score(true_labels, predicted_labels_agglo)
+        chosen_dim_fm[2, i] = fm_agglo
+
+    return chosen_dim_nmi, chosen_dim_silhouette, chosen_dim_fm
+
+
+n_clusters = np.arange(2, 15)
+pca_dim = 5
+
 chosen_dim_silhouette = np.zeros((3, len(n_clusters)))
 chosen_dim_nmi = np.zeros((3, len(n_clusters)))
 chosen_dim_fm = np.zeros((3, len(n_clusters)))
 
-pca_dim = 5
-for i, c in enumerate(n_clusters):
-    pca_data = reduce_dim(data, pca_dim)
+n_real = 30
+'''for n in range(n_real):
+    tmp_chosen_dim_nmi, tmp_chosen_dim_silhouette, tmp_chosen_dim_fm = score_for_chosen_pca_dim(n_clusters, data, pca_dim, labels)
 
-    # kMeans
-    predicted_labels_kmeans = KMeans(c).fit_predict(pca_data)
+    chosen_dim_nmi = (chosen_dim_nmi+tmp_chosen_dim_nmi)/2
+    chosen_dim_silhouette = (chosen_dim_silhouette+tmp_chosen_dim_silhouette)/2
+    chosen_dim_fm = (chosen_dim_fm+tmp_chosen_dim_fm)/2
 
-    nmi_kmeans = normalized_mutual_info_score(labels, predicted_labels_kmeans)
-    chosen_dim_nmi[0, i] = nmi_kmeans
-
-    silhouette_kmeans = silhouette_score(pca_data, predicted_labels_kmeans)
-    chosen_dim_silhouette[0, i] = silhouette_kmeans
-
-    fm_kmeans = fowlkes_mallows_score(labels, predicted_labels_kmeans)
-    chosen_dim_fm[0, i] = fm_kmeans
-
-    # GMM
-    predicted_labels_gmm = GaussianMixture(c).fit_predict(pca_data)
-
-    nmi_gmm = normalized_mutual_info_score(labels, predicted_labels_gmm)
-    chosen_dim_nmi[1, i] = nmi_gmm
-
-    silhouette_gmm = silhouette_score(pca_data, predicted_labels_gmm)
-    chosen_dim_silhouette[1, i] = silhouette_gmm
-
-    fm_gmm = fowlkes_mallows_score(labels, predicted_labels_gmm)
-    chosen_dim_fm[1, i] = fm_gmm
-
-    # Agglomerative
-    predicted_labels_agglo = AgglomerativeClustering(c).fit_predict(pca_data)
-
-    nmi_agglo = normalized_mutual_info_score(labels, predicted_labels_agglo)
-    chosen_dim_nmi[2, i] = nmi_agglo
-
-    silhouette_agglo = silhouette_score(pca_data, predicted_labels_agglo)
-    chosen_dim_silhouette[2, i] = silhouette_agglo
-
-    fm_agglo = fowlkes_mallows_score(labels, predicted_labels_agglo)
-    chosen_dim_fm[2, i] = fm_agglo
+print(f'NMI (class overlap) kMeans: {chosen_dim_nmi[0, 1]}')
+print(f'NMI (class overlap) GMM: {chosen_dim_nmi[1, 1]}')
+print(f'NMI (class overlap) Agglomerative: {chosen_dim_nmi[2, 1]} ')
 
 plots.plot_scores_vs_clusters(chosen_dim_silhouette, n_clusters, f'pca{pca_dim}_silhouette.png', 'Silhouette score')
 plots.plot_scores_vs_clusters(chosen_dim_nmi, n_clusters, f'pca{pca_dim}_nmi.png', 'NMI')
-plots.plot_scores_vs_clusters(chosen_dim_fm, n_clusters, f'pca{pca_dim}_fm.png', 'Fowlkes-Mallows score')
+plots.plot_scores_vs_clusters(chosen_dim_fm, n_clusters, f'pca{pca_dim}_fm.png', 'Fowlkes-Mallows score')'''
+
+
+def resample(n_real, n_clusters, df, pca_dim):
+    chosen_dim_nmi = np.zeros((n_real, 3, len(n_clusters)))
+    chosen_dim_silhouette = np.zeros((n_real, 3, len(n_clusters)))
+    chosen_dim_fm = np.zeros((n_real, 3, len(n_clusters)))
+
+    for n in range(n_real):
+        df_sample = df.sample(int(0.9*len(df)), replace=True, axis=0)
+
+        sampled_data = df_sample.loc[:, 'Gene 1':'Gene 2999']
+        sampled_labels = df_sample.loc[:, 'label']
+
+        print(f'Realisation: {n:03d}/{n_real}')
+        tmp_chosen_dim_nmi, tmp_chosen_dim_silhouette, tmp_chosen_dim_fm = score_for_chosen_pca_dim(n_clusters, sampled_data,
+                                                                                                    pca_dim, sampled_labels)
+
+        chosen_dim_nmi[n, :, :] = tmp_chosen_dim_nmi
+        chosen_dim_silhouette[n, :, :] = tmp_chosen_dim_silhouette
+        chosen_dim_fm[n, :, :] = tmp_chosen_dim_fm
+
+    return chosen_dim_nmi, chosen_dim_silhouette, chosen_dim_fm
+
+
+n_real = 500
+chosen_dim_nmi, chosen_dim_silhouette, chosen_dim_fm = resample(n_real, n_clusters, df, pca_dim)
+
+print(chosen_dim_nmi.shape)
+
+plots.plot_scores_hist(chosen_dim_nmi, 0, 3, 'nmi_hist_kmeans.png')
+plots.plot_scores_hist(chosen_dim_nmi, 1, 3, 'nmi_hist_gmm.png')
+plots.plot_scores_hist(chosen_dim_nmi, 2, 3, 'nmi_hist_agglomerative.png')
+
+plots.plot_scores_hist(chosen_dim_silhouette, 0, 3, 'silhouette_hist_kmeans.png')
+plots.plot_scores_hist(chosen_dim_silhouette, 1, 3, 'silhouette_hist_gmm.png')
+plots.plot_scores_hist(chosen_dim_silhouette, 2, 3, 'silhouette_hist_agglomerative.png')
+
+plots.plot_scores_hist(chosen_dim_fm, 0, 3, 'fm_hist_kmeans.png')
+plots.plot_scores_hist(chosen_dim_fm, 1, 3, 'fm_hist_gmm.png')
+plots.plot_scores_hist(chosen_dim_fm, 2, 3, 'fm_hist_agglomerative.png')
+
+
+
