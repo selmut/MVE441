@@ -58,7 +58,7 @@ def plot_scores_feature_selection(score, n_cluster, metric):
 
 def plot_dim_vs_clusters(scores, n_axes, n_clusters, filename):
     plt.figure()
-    sns.heatmap(scores, cmap='flare_r', yticklabels=n_axes, xticklabels=n_clusters, vmin=0, vmax=1)
+    sns.heatmap(scores, cmap='flare_r', yticklabels=[np.round(ax, 2) for ax in n_axes], xticklabels=n_clusters, vmin=0, vmax=1)
     plt.xlabel('Clusters')
     plt.ylabel('PCA-dim')
     '''plt.xticks([])
