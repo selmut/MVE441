@@ -39,7 +39,7 @@ def plot_scores(score, n_cluster, metric):
     plt.plot(n_cluster, score[1,:])
     plt.plot(n_cluster, score[2,:])
     plt.legend(['kMeans', 'GMM', 'Agglomerative'], loc='upper right')
-    plt.xlabel('Number of clusters'), plt.ylabel(metric), plt.title(metric+' score vs. number of clusters')
+    plt.xlabel('Number of clusters'), plt.ylabel(metric)
     plt.grid(True)
     plt.savefig('img/'+metric+'_vs_clusters.png')
     plt.close()
@@ -51,11 +51,11 @@ def plot_scores_feature_selection(score, n_cluster, metric):
     plt.plot(n_cluster, score[1,:])
     plt.plot(n_cluster, score[2,:])
     plt.legend(['kMeans', 'GMM', 'Agglomerative'], loc='upper right')
-    plt.xlabel('Number of clusters'), plt.ylabel(metric), plt.title(metric+' score vs. number of clusters for feature selection')
+    plt.xlabel('Number of clusters'), plt.ylabel(metric)
     plt.grid(True)
     plt.savefig('img/'+metric+'_vs_clusters_feat_selection.png')
     plt.close()
-    
+
 def plot_dim_vs_clusters(scores, n_axes, n_clusters, filename):
     plt.figure()
     sns.heatmap(scores, cmap='flare_r', yticklabels=n_axes, xticklabels=n_clusters, vmin=0, vmax=1)
@@ -85,3 +85,26 @@ def plot_scores_hist(chosen_dim_scores, classifier, n_clusters, filename):
     plt.savefig('img/histograms/'+filename)
     plt.close()
 
+# score |NMI|FM|Sil| 
+# cluster |Kmeans|GMM|Agglo| 
+# point
+def plot_scores_feature_selection_combined(score, n_cluster, filename):
+    plt.figure()
+    plt.plot(n_cluster, score[0,0,:], linestyle = '-', c='tab:pink')
+    plt.plot(n_cluster, score[0,1,:], linestyle = '--', c='tab:pink')
+    plt.plot(n_cluster, score[0,2,:], linestyle = '-.', c='tab:pink')
+
+    plt.plot(n_cluster, score[1,0,:], linestyle = '-', c='tab:olive')
+    plt.plot(n_cluster, score[1,1,:], linestyle = '--', c='tab:olive')
+    plt.plot(n_cluster, score[1,2,:], linestyle = '-.', c='tab:olive')
+
+    plt.plot(n_cluster, score[2,0,:], linestyle = '-', c='tab:cyan')
+    plt.plot(n_cluster, score[2,1,:], linestyle = '--', c='tab:cyan')
+    plt.plot(n_cluster, score[2,2,:], linestyle = '-.', c='tab:cyan')
+
+    plt.legend(['NMI, kMeans', 'NMI, GMM', 'NMI, Agglo.',
+                'FM, kMeans', 'FM, GMM', 'FM, Agglo.',
+                'Sil., kMeans', 'Sil., GMM', 'Sil., Agglo.'], loc='upper right')
+    plt.xlabel('Number of clusters'), plt.ylabel('Scores')
+    plt.savefig('img/'+filename)
+    plt.close()

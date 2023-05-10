@@ -9,7 +9,7 @@ from sklearn.cluster import AgglomerativeClustering
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import silhouette_score, normalized_mutual_info_score, fowlkes_mallows_score
-from loocv import LOOCV
+
 import plots
 import warnings
 

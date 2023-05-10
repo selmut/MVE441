@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt; plt.rcParams['figure.dpi'] = 200
-from Clustering.kmeans import kMeans
+from sklearn.cluster import KMeans
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.mixture import GaussianMixture
 from sklearn.decomposition import PCA
@@ -34,39 +34,42 @@ def reduce_dim(df, n):
 
     # extracts feature with maximum variance
     var_data = df.to_numpy()
-    var_feature = np.var(var_data, axis=0)
+    var_feature = np.var(var_data[:,1:], axis=0)
+    var_labels = var_data[:,0]
     var_thresh = 0.4*max(var_feature)
 
     # found index to remove and removes it after loop
     elements_to_remove = []
-    for i in range(std_data.shape[1]):
+    for i in range(var_feature.shape[0]):
         if var_feature[i] < var_thresh:
             elements_to_remove.append(i)
     var_data = np.delete(var_data, elements_to_remove, axis=1)
 
-    return [pca.fit_transform(std_data), var_data]
+    to_df = np.append(var_labels.reshape(-1, *var_labels.shape).T, var_data, axis=1)
+    var_pd = pd.DataFrame(to_df)
 
 
-[pca_data, var_data] = reduce_dim(data, 2)
-#plots.plot_pca(pca_data, labels)
+    return [pca.fit_transform(std_data), var_data, var_pd]
 
-[pca_data, var_data] = reduce_dim(data, 3)
+
+[pca_data, var_data, var_pd] = reduce_dim(df, 5)
 
 # plots.plot_pca_3D(pca_data, labels)
 
 #n_cluster = np.arange(2,data.shape[0])
-n_cluster = np.arange(2,8)
-n_runs_original = np.arange(3)
-n_runs_feature = np.arange(10)
+n_cluster = np.arange(2,2)
+n_runs_original = np.arange(1)
+n_runs_feature = np.arange(1)
 
 score_original_data = np.zeros([3,3,n_cluster.shape[0]])
 score_feature_selection = np.zeros([3,3,n_cluster.shape[0]])
+score_pca = np.zeros([3,3,n_cluster.shape[0]])
 print("\nCurrently computing metrics on original data")
 for run in n_runs_original:
     print("Run {} out of {}...".format(run+1,n_runs_original[-1]+1))
     for cluster in n_cluster:
         print("Clusters, {} out of {}...".format(cluster,n_cluster[-1]+1))
-        pred_labels_kmeans = kMeans(cluster).fit_predict(data)
+        pred_labels_kmeans = KMeans(cluster).fit_predict(data)
         score_original_data[0,0,cluster-2] += normalized_mutual_info_score(labels, pred_labels_kmeans)
         score_original_data[1,0,cluster-2] += fowlkes_mallows_score(labels, pred_labels_kmeans)
         score_original_data[2,0,cluster-2] += silhouette_score(data, pred_labels_kmeans)
@@ -81,11 +84,12 @@ for run in n_runs_original:
         score_original_data[1,2,cluster-2] += fowlkes_mallows_score(labels, pred_labels_agglo)
         score_original_data[2,2,cluster-2] += silhouette_score(data, pred_labels_agglo)
 
+
 print("\nCurrently computing metrics on feature selected data")
 for run in n_runs_feature:
     print("Run {} out of {}...".format(run+1,n_runs_feature[-1]+1))
     for cluster in n_cluster:
-        pred_labels_kmeans = kMeans(cluster).fit_predict(var_data)
+        pred_labels_kmeans = KMeans(cluster).fit_predict(var_data)
         score_feature_selection[0,0,cluster-2] += normalized_mutual_info_score(labels, pred_labels_kmeans)
         score_feature_selection[1,0,cluster-2] += fowlkes_mallows_score(labels, pred_labels_kmeans)
         score_feature_selection[2,0,cluster-2] += silhouette_score(var_data, pred_labels_kmeans)
@@ -99,15 +103,113 @@ for run in n_runs_feature:
         score_feature_selection[0,2,cluster-2] += normalized_mutual_info_score(labels, pred_labels_agglo)
         score_feature_selection[1,2,cluster-2] += fowlkes_mallows_score(labels, pred_labels_agglo)
         score_feature_selection[2,2,cluster-2] += silhouette_score(var_data, pred_labels_agglo)
+        
+
+print("\nCurrently computing metrics on pca data")
+for run in n_runs_feature:
+    print("Run {} out of {}...".format(run+1,n_runs_feature[-1]+1))
+    for cluster in n_cluster:
+        pred_labels_kmeans = KMeans(cluster).fit_predict(pca_data)
+        score_pca[0,0,cluster-2] += normalized_mutual_info_score(labels, pred_labels_kmeans)
+        score_pca[1,0,cluster-2] += fowlkes_mallows_score(labels, pred_labels_kmeans)
+        score_pca[2,0,cluster-2] += silhouette_score(pca_data, pred_labels_kmeans)
+
+        pred_labels_gmm = GaussianMixture(n_components=cluster).fit_predict(pca_data)
+        score_pca[0,1,cluster-2] += normalized_mutual_info_score(labels, pred_labels_gmm)
+        score_pca[1,1,cluster-2] += fowlkes_mallows_score(labels, pred_labels_gmm)
+        score_pca[2,1,cluster-2] += silhouette_score(pca_data, pred_labels_gmm)
+
+        pred_labels_agglo = AgglomerativeClustering(n_clusters=cluster).fit_predict(pca_data)
+        score_pca[0,2,cluster-2] += normalized_mutual_info_score(labels, pred_labels_agglo)
+        score_pca[1,2,cluster-2] += fowlkes_mallows_score(labels, pred_labels_agglo)
+        score_pca[2,2,cluster-2] += silhouette_score(pca_data, pred_labels_agglo)
 
 
 norm_original = n_runs_original[-1] + 1
 norm_feature = n_runs_feature[-1] + 1
-plots.plot_scores(score_original_data[0,:,:]/norm_original, n_cluster, 'NMI')
-plots.plot_scores(score_original_data[1,:,:]/norm_original, n_cluster, 'FM')
-plots.plot_scores(score_original_data[2,:,:]/norm_original, n_cluster, 'Silhouette')
+plots.plot_scores_feature_selection_combined(score_original_data/norm_original, n_cluster,'scores_vs_clusters_original_data.png')
+plots.plot_scores_feature_selection_combined(score_feature_selection/norm_feature, n_cluster,'scores_vs_clusters_feat_selection_data.png')
+plots.plot_scores_feature_selection_combined(score_pca/norm_feature, n_cluster,'scores_vs_clusters_pca_data.png')
 
-plots.plot_scores_feature_selection(score_feature_selection[0,:,:]/norm_feature, n_cluster, 'NMI')
-plots.plot_scores_feature_selection(score_feature_selection[1,:,:]/norm_feature, n_cluster, 'FM')
-plots.plot_scores_feature_selection(score_feature_selection[2,:,:]/norm_feature, n_cluster, 'Silhouette')
+#plots.plot_scores_feature_selection(score_feature_selection[0,:,:]/norm_feature, n_cluster, 'NMI')
+#plots.plot_scores_feature_selection(score_feature_selection[1,:,:]/norm_feature, n_cluster, 'FM')
+#plots.plot_scores_feature_selection(score_feature_selection[2,:,:]/norm_feature, n_cluster, 'Silhouette')
 
+
+
+def resample(n_real, n_cluster, df):
+    score = np.zeros([3,3,n_real])
+    
+    [pca_data, var_data, var_df] = reduce_dim(df,1)
+    
+    for n in range(n_real):
+        df_sample = var_df.sample(int(0.9*len(df)), replace=True, axis=0)
+
+        sampled_labels = df_sample.loc[:, 0]
+        sampled_data = df_sample.loc[:,0:var_df.shape[1]-2]
+
+        print(f'Realisation: {n:03d}/{n_real}')
+        pred_labels_kmeans = KMeans(n_clusters=n_cluster).fit_predict(sampled_data)
+        score[0,0,n] = normalized_mutual_info_score(sampled_labels, pred_labels_kmeans)
+        score[1,0,n] = fowlkes_mallows_score(sampled_labels, pred_labels_kmeans)
+        score[2,0,n] = silhouette_score(sampled_data, pred_labels_kmeans)
+
+        pred_labels_gmm = GaussianMixture(n_components=n_cluster).fit_predict(sampled_data)
+        score[0,1,n] = normalized_mutual_info_score(sampled_labels, pred_labels_gmm)
+        score[1,1,n] = fowlkes_mallows_score(sampled_labels, pred_labels_gmm)
+        score[2,1,n] = silhouette_score(sampled_data, pred_labels_gmm)
+
+        pred_labels_agglo = AgglomerativeClustering(n_clusters=n_cluster).fit_predict(sampled_data)
+        score[0,2,n] = normalized_mutual_info_score(sampled_labels, pred_labels_agglo)
+        score[1,2,n] = fowlkes_mallows_score(sampled_labels, pred_labels_agglo)
+        score[2,2,n] = silhouette_score(sampled_data, pred_labels_agglo)
+
+    return score
+
+n_real = 500
+score_histogram = resample(n_real, 3, df)
+
+plt.figure()
+plt.hist(score_histogram[0,0,:], bins=15)
+plt.savefig('img/hist_var_nmi_kmeans.png')
+plt.close()
+
+plt.figure()
+plt.hist(score_histogram[1,0,:], bins=15)
+plt.savefig('img/hist_var_fm_kmeans.png')
+plt.close()
+
+plt.figure()
+plt.hist(score_histogram[2,0,:], bins=15)
+plt.savefig('img/hist_var_sil_kmeans.png')
+plt.close()
+
+plt.figure()
+plt.hist(score_histogram[0,1,:], bins=15)
+plt.savefig('img/hist_var_nmi_gmm.png')
+plt.close()
+
+plt.figure()
+plt.hist(score_histogram[1,1,:], bins=15)
+plt.savefig('img/hist_var_fm_gmm.png')
+plt.close()
+
+plt.figure()
+plt.hist(score_histogram[2,1,:], bins=15)
+plt.savefig('img/hist_var_sil_gmm.png')
+plt.close()
+
+plt.figure()
+plt.hist(score_histogram[0,2,:], bins=15)
+plt.savefig('img/hist_var_nmi_agglo.png')
+plt.close()
+
+plt.figure()
+plt.hist(score_histogram[1,2,:], bins=15)
+plt.savefig('img/hist_var_fm_agglo.png')
+plt.close()
+
+plt.figure()
+plt.hist(score_histogram[2,2,:], bins=15)
+plt.savefig('img/hist_var_sil_agglo.png')
+plt.close()
