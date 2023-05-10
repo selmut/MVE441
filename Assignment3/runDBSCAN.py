@@ -5,7 +5,6 @@ from sklearn.metrics import silhouette_score
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import silhouette_score, normalized_mutual_info_score, fowlkes_mallows_score
-from loocv import LOOCV
 import warnings
 import matplotlib.pyplot as plt
 
@@ -21,8 +20,9 @@ df = df.rename(columns=new_keys)
 data = df.loc[:, 'Gene 1':'Gene 2999']
 labels = df['label']
 
+
 def reduce_dim(df,n):
-    std_data=StandardScaler().fit_transform(df)
+    #std_data=StandardScaler().fit_transform(df)
     pca=PCA(n_components=n,svd_solver='full')
     return pca.fit_transform(df)
 
@@ -40,31 +40,92 @@ def accuracy(clusteredData,labels):
 
     return totalAccuracy/nr_clusters
 
-pca_data=reduce_dim(data,5)
+max_dim=30
+n_min = 8
+dimCluster=np.empty(max_dim)
+dimNMI=np.empty(max_dim)
+dimSil=np.empty(max_dim)
+dimFM=np.empty(max_dim)
 
-#8, 12.9
 
-n_min=6
-d=np.zeros(82)
+for dim in range(1,max_dim):
+    pca_data=reduce_dim(data,dim)
+    maxNeighbourDist=np.zeros(82)
 
-for i in range(82):
-    distances=np.sqrt(np.sum((pca_data-pca_data[i,:])**2,axis=1))
-    idx = np.argpartition(distances, n_min)
-    d[i]=distances[idx[n_min]]
+    for i in range(82):
+        distances=np.sqrt(np.sum((pca_data-pca_data[i,:])**2,axis=1))
+        idx = np.argpartition(distances, n_min)
+        maxNeighbourDist[i]=distances[idx[n_min]]
 
-plt.plot(np.arange(82),np.sort(d))
+
+    epsilons=np.arange(np.round(np.min(maxNeighbourDist),1),np.round(np.max(maxNeighbourDist),1),step=0.1)
+
+    n=len(epsilons)
+
+    nmi=np.zeros(n)
+    fm=np.zeros(n)
+    silhouette=np.zeros(n)
+    clusters=np.zeros(n)
+
+    for i,eps in enumerate(epsilons):
+        dbscan=DensityBasedClustering(eps,n_min)
+        result=dbscan.fit_data(pca_data)
+
+        nmi[i]=normalized_mutual_info_score(labels,result)
+        fm[i]=fowlkes_mallows_score(labels, result)
+        nr_clusters = np.max(result) + 1
+        if nr_clusters>1:
+            silhouette[i] = silhouette_score(pca_data,result)
+        clusters[i]= nr_clusters
+
+    bestEpsidx=np.argmax(nmi)
+    dimCluster[dim]=clusters[bestEpsidx]
+    dimNMI[dim]=nmi[bestEpsidx]
+    dimSil[dim]=silhouette[bestEpsidx]
+    dimFM[dim]=fm[bestEpsidx]
+
+    if dim==5:
+        dbscan = DensityBasedClustering(epsilons[bestEpsidx], n_min)
+        result = dbscan.fit_data(pca_data)
+        print("unclassified:", np.sum(result == -1))
+        accuracy(result, labels)
+        print("nmi score:", dimNMI[5])
+        print("silhouette score:", dimSil[5])
+        print("fowlkes malloes score:", dimFM[5])
+
+        plt.plot(np.arange(82),np.sort(maxNeighbourDist))
+        plt.ylabel('epsilon')
+        plt.show()
+
+        plt.plot(epsilons,nmi, label='NMI-score')
+        plt.plot(epsilons,fm, label='FM-score')
+        plt.plot(epsilons,silhouette,label='Silhouette-score')
+        plt.xlabel('epsilon')
+        plt.legend()
+        plt.show()
+
+        plt.scatter(epsilons,clusters)
+        plt.xlabel('epsilon')
+        plt.ylabel('nr of clusters')
+        plt.show()
+
+plt.plot(np.arange(1,max_dim), dimNMI[1:],label='NMI-score')
+plt.plot(np.arange(1,max_dim), dimSil[1:],label='Silhouette-score')
+plt.plot(np.arange(1,max_dim), dimFM[1:],label='FM-score')
+plt.xlabel('PCA-dim')
+plt.legend()
 plt.show()
 
-dbscan=DensityBasedClustering(12.5,n_min)
-result=dbscan.fit_data(pca_data)
+plt.scatter(np.arange(1,max_dim), dimCluster[1:])
+plt.xlabel('PCA-dim')
+plt.ylabel('nr of clusters')
+plt.show()
 
-nmi=normalized_mutual_info_score(labels,result)
-silhouette=silhouette_score(pca_data,result)
-fm=fowlkes_mallows_score(labels, result)
 
-print("unclassified:",np.sum(result==-1))
+#ax = plt.axes(projection='3d')
+#ax.scatter3D(pca_data[:,0], pca_data[:,1], pca_data[:,2], c=labels)
+#plt.show()
 
-accuracy(result,labels)
-print("nmi score:",nmi)
-print("silhouette score:",silhouette)
-print("fowlkes malloes score:",fm)
+
+#plt.scatter(pca_data[:,0], pca_data[:,1], c=labels)
+#plt.show()

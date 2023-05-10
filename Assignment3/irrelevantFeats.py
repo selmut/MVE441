@@ -1,4 +1,3 @@
-import random
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
@@ -21,26 +20,39 @@ labels = TCGAData['TCGAclassstr']
 
 datapoints = data.shape[0]
 features = data.shape[1]
-print(labels.value_counts())
+
+#print(labels.value_counts())
+
+
 
 def getImportantFeats(df,n):
     # extracts feature with maximum variance
     var_data = df.to_numpy()
     var_feature = np.var(var_data, axis=0)
     idx = np.argpartition(-var_feature, n)
-    return idx[:n]
+    orderdidx=np.argsort(-var_feature[idx[:n]])
+    return idx[orderdidx]
 
-def reduce_dim(df,n):
+def getImportantFeatsPCA(df,n):
     std_data=StandardScaler().fit_transform(df)
-    pca=PCA(n_components=n,svd_solver='full')
-    return pca.fit_transform(std_data)
-n_runs=1
+    pca=PCA(n_components=5,svd_solver='full')
+    pca_data=pca.fit_transform(std_data)
+    importance=np.sum(np.abs(pca.components_),axis=0)
+    idx = np.argpartition(-importance, n)
+    orderdidx = np.argsort(-importance[idx[:n]])
+    return idx[orderdidx]
+
+
+n_runs=20
 n_clusters=20
 proportion = [5,15,30,60,90]
 n_proportions=len(proportion)
 scores_nmi=np.zeros([n_proportions,n_clusters])
 scores_silhouette=np.zeros([n_proportions,n_clusters])
 scores_fm=np.zeros([n_proportions,n_clusters])
+
+#top100=getImportantFeats(data,100)
+top100=getImportantFeatsPCA(data,100)
 
 for r in range (n_runs):
     for i in range(n_proportions):
@@ -50,7 +62,7 @@ for r in range (n_runs):
         noise = np.random.uniform(-1.5, 1.5, size=[datapoints, 100-n])
         irrfeats=data.iloc[:, randfeats].multiply(noise)
 
-        loop_data=pd.concat([data.iloc[:,getImportantFeats(data,n)],irrfeats],axis=1)
+        loop_data=pd.concat([data.iloc[:,top100[:n]],irrfeats],axis=1)
         std_data = StandardScaler().fit_transform(loop_data)
 
         for c in range(2,n_clusters):
@@ -91,7 +103,7 @@ plt.show()
 
 for i in range(n_proportions):
     plt.plot(np.arange(2,n_clusters),scores_fm[i,2:],label=proportion[i])
-plt.xticks(np.arange(2,n_clusters))
+plt.xticks(np.arange(2,n_clusters,step=2))
 plt.xlabel('nr of clusters')
 plt.ylabel('fm score')
 plt.legend()
